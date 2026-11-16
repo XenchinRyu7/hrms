@@ -23,6 +23,7 @@ import {
 } from '@etherealui/react';
 import { useAuth } from '../../lib/auth-context';
 import { api } from '../../lib/api';
+import { NavLink } from '../../lib/nav-context';
 import type { DashboardTelemetry, Attendance } from '../../lib/types';
 
 export function DashboardView() {
@@ -285,41 +286,41 @@ export function DashboardView() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <a
+            <NavLink
               href="/employees"
               className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted transition text-left block"
             >
               <Users className="h-4 w-4 text-primary mb-1.5" />
               <p className="text-xs font-semibold text-foreground">Directory</p>
               <p className="text-[11px] text-muted-foreground">Manage 5 members</p>
-            </a>
+            </NavLink>
 
-            <a
+            <NavLink
               href="/attendance"
               className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted transition text-left block"
             >
               <Clock className="h-4 w-4 text-emerald-500 mb-1.5" />
               <p className="text-xs font-semibold text-foreground">Attendance</p>
               <p className="text-[11px] text-muted-foreground">View timesheets</p>
-            </a>
+            </NavLink>
 
-            <a
+            <NavLink
               href="/leave"
               className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted transition text-left block"
             >
               <CalendarCheck className="h-4 w-4 text-amber-500 mb-1.5" />
               <p className="text-xs font-semibold text-foreground">Time-Off</p>
               <p className="text-[11px] text-muted-foreground">1 pending request</p>
-            </a>
+            </NavLink>
 
-            <a
+            <NavLink
               href="/payroll"
               className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted transition text-left block"
             >
               <DollarSign className="h-4 w-4 text-indigo-500 mb-1.5" />
               <p className="text-xs font-semibold text-foreground">Payroll</p>
               <p className="text-[11px] text-muted-foreground">Generate cycle</p>
-            </a>
+            </NavLink>
           </div>
 
           <div className="rounded-xl border border-border bg-primary/5 p-3 flex items-center justify-between">
@@ -341,10 +342,10 @@ export function DashboardView() {
               <h3 className="text-base font-bold text-card-foreground">Audit Log Stream</h3>
               <p className="text-xs text-muted-foreground">Secured activity journal and system telemetry</p>
             </div>
-            <a href="/audit" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+            <NavLink href="/audit" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
               <span>View All</span>
               <ArrowUpRight className="h-3 w-3" />
-            </a>
+            </NavLink>
           </div>
 
           <div className="space-y-2.5">

@@ -15,7 +15,6 @@ import {
   Building2,
   Menu,
   X,
-  Sparkles,
 } from 'lucide-react';
 import {
   Avatar,
@@ -29,6 +28,7 @@ import {
   DropdownMenuLabel,
 } from '@etherealui/react';
 import { useAuth, DEMO_ACCOUNTS } from '../../lib/auth-context';
+import { useNav, NavLink } from '../../lib/nav-context';
 
 interface HRMSAppShellProps {
   children: React.ReactNode;
@@ -48,9 +48,12 @@ const NAV_ITEMS = [
   { label: 'System Settings', href: '/settings', icon: Settings },
 ];
 
-export function HRMSAppShell({ children, activePath = '/' }: HRMSAppShellProps) {
+export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   const { user, logout, switchRole } = useAuth();
+  const { currentPath } = useNav();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const effectivePath = currentPath || activePath || '/';
 
   const getRoleVariant = (role?: string) => {
     switch (role) {
@@ -105,9 +108,9 @@ export function HRMSAppShell({ children, activePath = '/' }: HRMSAppShellProps) 
           </div>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = activePath === item.href;
+            const isActive = effectivePath === item.href;
             return (
-              <a
+              <NavLink
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
@@ -118,7 +121,7 @@ export function HRMSAppShell({ children, activePath = '/' }: HRMSAppShellProps) 
               >
                 <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                 <span>{item.label}</span>
-              </a>
+              </NavLink>
             );
           })}
         </div>
@@ -212,9 +215,9 @@ export function HRMSAppShell({ children, activePath = '/' }: HRMSAppShellProps) 
           <div className="md:hidden border-b border-border bg-sidebar/95 backdrop-blur-md p-4 space-y-2">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = activePath === item.href;
+              const isActive = effectivePath === item.href;
               return (
-                <a
+                <NavLink
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
@@ -226,7 +229,7 @@ export function HRMSAppShell({ children, activePath = '/' }: HRMSAppShellProps) 
                 >
                   <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
-                </a>
+                </NavLink>
               );
             })}
           </div>

@@ -13,7 +13,7 @@ import { SettingsView } from '../views/SettingsView';
 
 export function DashboardPage() {
   return (
-    <AppContainer activePath="/">
+    <AppContainer initialPath="/">
       <DashboardView />
     </AppContainer>
   );
@@ -21,7 +21,7 @@ export function DashboardPage() {
 
 export function EmployeesPage() {
   return (
-    <AppContainer activePath="/employees">
+    <AppContainer initialPath="/employees">
       <EmployeesView />
     </AppContainer>
   );
@@ -29,7 +29,7 @@ export function EmployeesPage() {
 
 export function AttendancePage() {
   return (
-    <AppContainer activePath="/attendance">
+    <AppContainer initialPath="/attendance">
       <AttendanceView />
     </AppContainer>
   );
@@ -37,7 +37,7 @@ export function AttendancePage() {
 
 export function LeavePage() {
   return (
-    <AppContainer activePath="/leave">
+    <AppContainer initialPath="/leave">
       <LeaveView />
     </AppContainer>
   );
@@ -45,7 +45,7 @@ export function LeavePage() {
 
 export function PayrollPage() {
   return (
-    <AppContainer activePath="/payroll">
+    <AppContainer initialPath="/payroll">
       <PayrollView />
     </AppContainer>
   );
@@ -53,7 +53,7 @@ export function PayrollPage() {
 
 export function RecruitmentPage() {
   return (
-    <AppContainer activePath="/recruitment">
+    <AppContainer initialPath="/recruitment">
       <RecruitmentView />
     </AppContainer>
   );
@@ -61,7 +61,7 @@ export function RecruitmentPage() {
 
 export function PerformancePage() {
   return (
-    <AppContainer activePath="/performance">
+    <AppContainer initialPath="/performance">
       <PerformanceView />
     </AppContainer>
   );
@@ -69,7 +69,7 @@ export function PerformancePage() {
 
 export function ExpensesPage() {
   return (
-    <AppContainer activePath="/expenses">
+    <AppContainer initialPath="/expenses">
       <ExpensesView />
     </AppContainer>
   );
@@ -77,7 +77,7 @@ export function ExpensesPage() {
 
 export function AuditPage() {
   return (
-    <AppContainer activePath="/audit">
+    <AppContainer initialPath="/audit">
       <AuditView />
     </AppContainer>
   );
@@ -85,7 +85,7 @@ export function AuditPage() {
 
 export function SettingsPage() {
   return (
-    <AppContainer activePath="/settings">
+    <AppContainer initialPath="/settings">
       <SettingsView />
     </AppContainer>
   );
