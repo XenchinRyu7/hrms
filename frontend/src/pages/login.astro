@@ -1,0 +1,11 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { AuthProvider } from '../lib/auth-context';
+import { LoginView } from '../components/views/LoginView';
+---
+
+<RootLayout title="Login — Ethereal Enterprise HRMS">
+  <AuthProvider client:only="react">
+    <LoginView />
+  </AuthProvider>
+</RootLayout>
