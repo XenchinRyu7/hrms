@@ -1,0 +1,28 @@
+{
+  "name": "ethereal-enterprise-hrms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade Enterprise Human Resource Management System powered by Ethereal UI, Astro 5, Go 1.25, and Supabase",
+  "scripts": {
+    "prepare": "husky",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "cd backend && go run ./cmd/server/main.go",
+    "build:frontend": "pnpm --filter frontend build",
+    "lint:frontend": "pnpm --filter frontend lint",
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx,astro,json,css}": [
+      "prettier --write --ignore-unknown"
+    ],
+    "backend/**/*.go": [
+      "gofmt -w"
+    ]
+  }
+}
