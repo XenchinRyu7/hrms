@@ -39,11 +39,14 @@ func InitStore(cfg *config.Config) Store {
 
 				// Start automated background keep-alive worker to prevent free tier auto-pause
 				StartKeepAliveWorker(db, host, 6*time.Hour)
+
+				log.Println("[Database] 🚀 Real Enterprise PostgreSQL Engine Active (CRUD persisted to Supabase)")
+				return NewPostgresStore(db)
 			}
 		}
 	}
 
-	log.Println("[Database] Initializing Ethereal HRMS Enterprise Data Engine (Active & Seeded)")
+	log.Println("[Database] ℹ️ Using Seeded In-Memory Data Engine (Offline/Fallback Mode)")
 	return NewMemoryStore()
 }
 
