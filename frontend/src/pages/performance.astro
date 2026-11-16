@@ -1,14 +1,8 @@
 ---
 import RootLayout from '../layouts/RootLayout.astro';
-import { AuthProvider } from '../lib/auth-context';
-import { HRMSAppShell } from '../components/layout/HRMSAppShell';
-import { PerformanceView } from '../components/views/PerformanceView';
+import { PerformancePage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Performance & OKRs — Ethereal HRMS">
-  <AuthProvider client:only="react">
-    <HRMSAppShell client:only="react" activePath="/performance">
-      <PerformanceView client:only="react" />
-    </HRMSAppShell>
-  </AuthProvider>
+  <PerformancePage client:only="react" />
 </RootLayout>

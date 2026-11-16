@@ -1,14 +1,8 @@
 ---
 import RootLayout from '../layouts/RootLayout.astro';
-import { AuthProvider } from '../lib/auth-context';
-import { HRMSAppShell } from '../components/layout/HRMSAppShell';
-import { EmployeesView } from '../components/views/EmployeesView';
+import { EmployeesPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Employees & Org Directory — Ethereal HRMS">
-  <AuthProvider client:only="react">
-    <HRMSAppShell client:only="react" activePath="/employees">
-      <EmployeesView client:only="react" />
-    </HRMSAppShell>
-  </AuthProvider>
+  <EmployeesPage client:only="react" />
 </RootLayout>

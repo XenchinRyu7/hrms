@@ -1,14 +1,8 @@
 ---
 import RootLayout from '../layouts/RootLayout.astro';
-import { AuthProvider } from '../lib/auth-context';
-import { HRMSAppShell } from '../components/layout/HRMSAppShell';
-import { AttendanceView } from '../components/views/AttendanceView';
+import { AttendancePage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Attendance & Timesheets — Ethereal HRMS">
-  <AuthProvider client:only="react">
-    <HRMSAppShell client:only="react" activePath="/attendance">
-      <AttendanceView client:only="react" />
-    </HRMSAppShell>
-  </AuthProvider>
+  <AttendancePage client:only="react" />
 </RootLayout>

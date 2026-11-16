@@ -1,14 +1,8 @@
 ---
 import RootLayout from '../layouts/RootLayout.astro';
-import { AuthProvider } from '../lib/auth-context';
-import { HRMSAppShell } from '../components/layout/HRMSAppShell';
-import { DashboardView } from '../components/views/DashboardView';
+import { DashboardPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Executive Console — Ethereal HRMS">
-  <AuthProvider client:only="react">
-    <HRMSAppShell client:only="react" activePath="/">
-      <DashboardView client:only="react" />
-    </HRMSAppShell>
-  </AuthProvider>
+  <DashboardPage client:only="react" />
 </RootLayout>
