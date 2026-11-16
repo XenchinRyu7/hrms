@@ -418,7 +418,7 @@ func (s *PostgresStore) ClockIn(employeeID, location, notes, ip string) (*models
 			work_location = EXCLUDED.work_location,
 			notes = EXCLUDED.notes,
 			updated_at = NOW()
-		RETURNING id, employee_id, date::text, clock_in, clock_out, total_hours, status, work_location, notes, created_at, updated_at;`
+		RETURNING id, employee_id, date::text, clock_in, clock_out, total_hours, status, work_location, COALESCE(notes, ''), created_at, updated_at;`
 
 	var att models.Attendance
 	err := s.db.QueryRow(query, id, employeeID, now, status, location, ip, notes).Scan(
@@ -439,7 +439,7 @@ func (s *PostgresStore) ClockOut(employeeID string) (*models.Attendance, error) 
 			total_hours = ROUND(EXTRACT(EPOCH FROM (NOW() - clock_in)) / 3600.0, 2),
 			updated_at = NOW()
 		WHERE employee_id = $1 AND date = CURRENT_DATE
-		RETURNING id, employee_id, date::text, clock_in, clock_out, total_hours, status, work_location, notes, created_at, updated_at;`
+		RETURNING id, employee_id, date::text, clock_in, clock_out, total_hours, status, work_location, COALESCE(notes, ''), created_at, updated_at;`
 
 	var att models.Attendance
 	err := s.db.QueryRow(query, employeeID).Scan(
@@ -1236,7 +1236,7 @@ func (s *PostgresStore) UpdateExpenseStatus(expenseID, status, approverID, reaso
 			approved_at = NOW(),
 			updated_at = NOW()
 		WHERE id = $4
-		RETURNING id, employee_id, title, category, amount, expense_date::text, description, status, created_at;`
+		RETURNING id, employee_id, title, category, amount, expense_date::text, COALESCE(description, ''), status, created_at;`
 
 	var exp models.Expense
 	err := s.db.QueryRow(query, status, approverID, reason, expenseID).Scan(

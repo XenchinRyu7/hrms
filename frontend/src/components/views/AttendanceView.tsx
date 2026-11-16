@@ -14,10 +14,12 @@ import {
 import { Button, Badge, Input } from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useNotification } from "../../lib/notification-context";
 import type { Attendance, User } from "../../lib/types";
 
 export function AttendanceView() {
   const { user } = useAuth();
+  const { toast } = useNotification();
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(
     null,
   );
@@ -70,10 +72,16 @@ export function AttendanceView() {
       const updated = await api.clockIn(location, notes);
       setTodayAttendance(updated);
       setFeedback("Successfully clocked in! Welcome to work.");
+      toast.success(
+        "Clock-In Verified",
+        `Status: ${updated.status === "on_time" ? "Tepat Waktu" : "Terlambat"} via ${location}`,
+      );
       setNotes("");
       loadAttendance();
     } catch (err: any) {
-      setFeedback(err.message || "Clock-in failed");
+      const msg = err.message || "Clock-in failed";
+      setFeedback(msg);
+      toast.error("Clock-In Gagal", msg);
     } finally {
       setClockActionLoading(false);
     }
@@ -86,9 +94,15 @@ export function AttendanceView() {
       const updated = await api.clockOut();
       setTodayAttendance(updated);
       setFeedback("Successfully clocked out! Have a good rest.");
+      toast.success(
+        "Clock-Out Berhasil",
+        `Total jam kerja: ${updated.total_hours} jam.`,
+      );
       loadAttendance();
     } catch (err: any) {
-      setFeedback(err.message || "Clock-out failed");
+      const msg = err.message || "Clock-out failed";
+      setFeedback(msg);
+      toast.error("Clock-Out Gagal", msg);
     } finally {
       setClockActionLoading(false);
     }

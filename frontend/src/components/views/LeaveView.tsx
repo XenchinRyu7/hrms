@@ -14,10 +14,12 @@ import {
 import { Button, Badge, Input, Textarea } from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useNotification } from "../../lib/notification-context";
 import type { LeaveType, LeaveBalance, LeaveRequest } from "../../lib/types";
 
 export function LeaveView() {
   const { user } = useAuth();
+  const { toast } = useNotification();
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   const [types, setTypes] = useState<LeaveType[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -74,6 +76,10 @@ export function LeaveView() {
     try {
       await api.createLeaveRequest(newRequest);
       setIsModalOpen(false);
+      toast.success(
+        "Pengajuan Cuti Terkirim",
+        `${newRequest.total_days} hari diajukan untuk persetujuan.`,
+      );
       setNewRequest({
         leave_type_id: types[0]?.id || "",
         start_date: "",
@@ -83,7 +89,8 @@ export function LeaveView() {
       });
       loadData();
     } catch (err: any) {
-      alert(err.message || "Failed to submit leave request");
+      const msg = err.message || "Failed to submit leave request";
+      toast.error("Pengajuan Gagal", msg);
     } finally {
       setSubmitting(false);
     }
@@ -102,9 +109,16 @@ export function LeaveView() {
           ? "Approved by manager"
           : "Declined per operational schedule",
       );
+      toast.info(
+        status === "approved" ? "Cuti Disetujui" : "Cuti Ditolak",
+        `Permohonan cuti telah diperbarui dalam database.`,
+      );
       loadData();
     } catch (err: any) {
-      alert(err.message || "Failed to update leave request");
+      toast.error(
+        "Gagal Memperbarui Cuti",
+        err.message || "Failed to update leave request",
+      );
     } finally {
       setActionLoading(null);
     }
