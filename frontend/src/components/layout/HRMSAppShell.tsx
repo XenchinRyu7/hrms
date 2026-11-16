@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -18,8 +18,8 @@ import {
   Sun,
   Moon,
   Palette,
-  Sparkles,
-} from 'lucide-react';
+  ShieldAlert,
+} from "lucide-react";
 import {
   Avatar,
   Badge,
@@ -30,62 +30,157 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from '@etherealui/react';
-import { useAuth, DEMO_ACCOUNTS } from '../../lib/auth-context';
-import { useNav, NavLink } from '../../lib/nav-context';
-import { useTheme, THEME_OPTIONS } from '../../lib/theme-context';
+} from "@etherealui/react";
+import { useAuth, DEMO_ACCOUNTS } from "../../lib/auth-context";
+import { useNav, NavLink } from "../../lib/nav-context";
+import { useTheme, THEME_OPTIONS } from "../../lib/theme-context";
 
 interface HRMSAppShellProps {
   children: React.ReactNode;
   activePath?: string;
 }
 
-const NAV_ITEMS = [
-  { label: 'Executive Console', href: '/', icon: LayoutDashboard },
-  { label: 'Employees & Org', href: '/employees', icon: Users },
-  { label: 'Attendance & Clock', href: '/attendance', icon: Clock },
-  { label: 'Leave & Time-Off', href: '/leave', icon: CalendarOff },
-  { label: 'Payroll & Comp', href: '/payroll', icon: Wallet },
-  { label: 'Recruitment & ATS', href: '/recruitment', icon: Briefcase },
-  { label: 'Performance & OKR', href: '/performance', icon: Target },
-  { label: 'Expenses & Claims', href: '/expenses', icon: Receipt },
-  { label: 'Compliance & Audit', href: '/audit', icon: ShieldCheck },
-  { label: 'System Settings', href: '/settings', icon: Settings },
+interface NavItem {
+  label: string;
+  href: string;
+  icon: any;
+  roles: string[];
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: "Overview",
+    items: [
+      {
+        label: "Executive Console",
+        href: "/",
+        icon: LayoutDashboard,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+      {
+        label: "Employees & Org",
+        href: "/employees",
+        icon: Users,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+    ],
+  },
+  {
+    title: "Workplace & Time",
+    items: [
+      {
+        label: "Attendance & Clock",
+        href: "/attendance",
+        icon: Clock,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+      {
+        label: "Leave & Time-Off",
+        href: "/leave",
+        icon: CalendarOff,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+    ],
+  },
+  {
+    title: "Finance & Talent",
+    items: [
+      {
+        label: "Payroll & Comp",
+        href: "/payroll",
+        icon: Wallet,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+      {
+        label: "Recruitment & ATS",
+        href: "/recruitment",
+        icon: Briefcase,
+        roles: ["admin", "hr_manager"],
+      },
+      {
+        label: "Expenses & Claims",
+        href: "/expenses",
+        icon: Receipt,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+    ],
+  },
+  {
+    title: "Growth & Governance",
+    items: [
+      {
+        label: "Performance & OKR",
+        href: "/performance",
+        icon: Target,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
+      {
+        label: "Compliance & Audit",
+        href: "/audit",
+        icon: ShieldCheck,
+        roles: ["admin", "hr_manager"],
+      },
+      {
+        label: "System Settings",
+        href: "/settings",
+        icon: Settings,
+        roles: ["admin"],
+      },
+    ],
+  },
 ];
 
 export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   const { user, logout, switchRole } = useAuth();
-  const { currentPath } = useNav();
+  const { currentPath, navigate } = useNav();
   const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const effectivePath = currentPath || activePath || '/';
+  const effectivePath = currentPath || activePath || "/";
+  const userRole = user?.role || "employee";
 
   const getRoleVariant = (role?: string) => {
     switch (role) {
-      case 'admin':
-        return 'primary';
-      case 'hr_manager':
-        return 'secondary';
-      case 'manager':
-        return 'outline';
+      case "admin":
+        return "primary";
+      case "hr_manager":
+        return "secondary";
+      case "manager":
+        return "outline";
       default:
-        return 'muted';
+        return "muted";
     }
   };
 
   const getRoleLabel = (role?: string) => {
     switch (role) {
-      case 'admin':
-        return 'Super Admin';
-      case 'hr_manager':
-        return 'HR Director';
-      case 'manager':
-        return 'Team Lead';
+      case "admin":
+        return "Super Admin";
+      case "hr_manager":
+        return "HR Director";
+      case "manager":
+        return "Team Lead";
       default:
-        return 'Employee';
+        return "Employee";
     }
   };
+
+  // Filter sections and items based on role
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => item.roles.includes(userRole)),
+  })).filter((section) => section.items.length > 0);
+
+  // Check if current route is allowed for user
+  const allNavItems = NAV_SECTIONS.flatMap((s) => s.items);
+  const currentNavItem = allNavItems.find((i) => i.href === effectivePath);
+  const isAuthorized =
+    !currentNavItem || currentNavItem.roles.includes(userRole);
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row transition-colors duration-150">
@@ -100,36 +195,46 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
             <div>
               <div className="font-bold tracking-tight text-sm flex items-center gap-1.5">
                 <span>Ethereal HRMS</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">v2.0</span>
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  v2.0
+                </span>
               </div>
-              <p className="text-[11px] text-muted-foreground">Enterprise People Ops</p>
+              <p className="text-[11px] text-muted-foreground">
+                Enterprise People Ops
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          <div className="px-3 pb-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-            Core Modules
-          </div>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = effectivePath === item.href;
-            return (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
+        {/* Navigation Items grouped by section with RBAC filtering */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+          {visibleSections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              <div className="px-3 pb-1 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/80">
+                {section.title}
+              </div>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = effectivePath === item.href;
+                return (
+                  <NavLink
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-4 w-4 shrink-0 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
         {/* User Card & Role Switcher in Sidebar Footer */}
@@ -139,32 +244,55 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
               <button className="w-full flex items-center justify-between p-2 rounded-xl border border-border hover:bg-muted transition text-left cursor-pointer">
                 <div className="flex items-center gap-2.5 truncate">
                   <Avatar
-                    src={user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
-                    alt={user?.full_name || 'User'}
+                    src={
+                      user?.avatar_url ||
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
+                    }
+                    alt={user?.full_name || "User"}
                     className="h-8 w-8 rounded-lg shrink-0 border border-border"
                   />
                   <div className="truncate">
-                    <p className="text-xs font-semibold truncate leading-tight">{user?.full_name || 'Alex Thorne'}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{getRoleLabel(user?.role)}</p>
+                    <p className="text-xs font-semibold truncate leading-tight">
+                      {user?.full_name || "Alex Thorne"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {getRoleLabel(user?.role)}
+                    </p>
                   </div>
                 </div>
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Quick Switch Role (Demo)</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel>
+                Quick Switch Role (Enterprise Demo)
+              </DropdownMenuLabel>
               {DEMO_ACCOUNTS.map((acc) => (
                 <DropdownMenuItem
                   key={acc.role}
                   onClick={() => switchRole(acc.role)}
-                  className="flex items-center justify-between text-xs cursor-pointer"
+                  className="flex items-center justify-between text-xs cursor-pointer py-2"
                 >
-                  <span>{acc.name}</span>
-                  {user?.role === acc.role && <Badge variant="primary" className="text-[9px]">Active</Badge>}
+                  <div className="flex flex-col">
+                    <span className="font-medium text-foreground">
+                      {acc.name}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {getRoleLabel(acc.role)}
+                    </span>
+                  </div>
+                  {user?.role === acc.role && (
+                    <Badge variant="primary" className="text-[9px]">
+                      Active
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive text-xs cursor-pointer flex items-center gap-2">
+              <DropdownMenuItem
+                onClick={logout}
+                className="text-destructive text-xs cursor-pointer flex items-center gap-2"
+              >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>Sign Out</span>
               </DropdownMenuItem>
@@ -182,13 +310,24 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg border border-border text-foreground hover:bg-muted cursor-pointer"
             >
-              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {mobileMenuOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Menu className="h-4 w-4" />
+              )}
             </button>
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              <span className="text-xs font-medium text-muted-foreground hidden sm:inline">Workspace:</span>
-              <span className="text-xs font-semibold text-foreground">Ethereal Global Corp</span>
-              <Badge variant="outline" className="text-[10px] hidden md:inline-flex border-border">
+              <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                Workspace:
+              </span>
+              <span className="text-xs font-semibold text-foreground">
+                Ethereal Global Corp
+              </span>
+              <Badge
+                variant="outline"
+                className="text-[10px] hidden md:inline-flex border-border"
+              >
                 Jakarta HQ &bull; UTC+7
               </Badge>
             </div>
@@ -205,7 +344,8 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 >
                   <Palette className="h-3.5 w-3.5 text-primary" />
                   <span className="hidden sm:inline capitalize font-medium text-[11px]">
-                    {THEME_OPTIONS.find((t) => t.id === colorTheme)?.name || 'Theme'}
+                    {THEME_OPTIONS.find((t) => t.id === colorTheme)?.name ||
+                      "Theme"}
                   </span>
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </button>
@@ -219,11 +359,15 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                     className="flex items-center justify-between text-xs cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 rounded-full ${t.previewClass}`} />
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${t.previewClass}`}
+                      />
                       <span>{t.name}</span>
                     </div>
                     {colorTheme === t.id && (
-                      <Badge variant="primary" className="text-[9px]">Active</Badge>
+                      <Badge variant="primary" className="text-[9px]">
+                        Active
+                      </Badge>
                     )}
                   </DropdownMenuItem>
                 ))}
@@ -234,20 +378,49 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
             <button
               type="button"
               onClick={toggleMode}
-              title={mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              title={
+                mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+              }
               className="p-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer flex items-center justify-center"
             >
-              {mode === 'dark' ? (
+              {mode === "dark" ? (
                 <Sun className="h-4 w-4 text-amber-400" />
               ) : (
                 <Moon className="h-4 w-4 text-primary" />
               )}
             </button>
 
-            {/* Role Badge */}
-            <Badge variant={getRoleVariant(user?.role)} className="text-xs px-2.5 py-1 hidden sm:inline-flex">
-              {getRoleLabel(user?.role)}
-            </Badge>
+            {/* Role Switcher in Top Bar */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer transition">
+                  <Badge
+                    variant={getRoleVariant(user?.role)}
+                    className="text-[11px] px-2 py-0.5"
+                  >
+                    {getRoleLabel(user?.role)}
+                  </Badge>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Switch Persona Role</DropdownMenuLabel>
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <DropdownMenuItem
+                    key={acc.role}
+                    onClick={() => switchRole(acc.role)}
+                    className="flex items-center justify-between text-xs cursor-pointer"
+                  >
+                    <span>{acc.name}</span>
+                    {user?.role === acc.role && (
+                      <Badge variant="primary" className="text-[9px]">
+                        Active
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Logout Button */}
             <Button
@@ -262,34 +435,86 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
           </div>
         </header>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Navigation Drawer with RBAC filtering */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-border bg-sidebar/95 backdrop-blur-md p-4 space-y-2">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = effectivePath === item.href;
-              return (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
+          <div className="md:hidden border-b border-border bg-sidebar/95 backdrop-blur-md p-4 space-y-4">
+            {visibleSections.map((section) => (
+              <div key={section.title} className="space-y-1">
+                <div className="px-2 text-[10px] uppercase font-semibold text-muted-foreground">
+                  {section.title}
+                </div>
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = effectivePath === item.href;
+                  return (
+                    <NavLink
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition ${
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Main Viewport */}
+        {/* Main Viewport with RBAC Enforcement Guard */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
-          {children}
+          {isAuthorized ? (
+            children
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+              <div className="h-16 w-16 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mb-4 border border-destructive/20 shadow-sm">
+                <ShieldAlert className="h-8 w-8 text-destructive" />
+              </div>
+              <Badge
+                variant="outline"
+                className="text-xs mb-2 border-destructive/30 text-destructive"
+              >
+                Access Restricted &bull; 403 Forbidden
+              </Badge>
+              <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">
+                Enterprise RBAC Policy Enforced
+              </h2>
+              <p className="text-xs text-muted-foreground max-w-md mb-6 leading-relaxed">
+                Your current role (
+                <span className="font-semibold text-foreground">
+                  {getRoleLabel(user?.role)}
+                </span>
+                ) does not possess clearance to access module{" "}
+                <span className="font-mono text-primary font-semibold">
+                  {currentNavItem?.label}
+                </span>
+                . Enterprise security policies restrict this module to
+                authorized roles ({currentNavItem?.roles.join(", ")}).
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => navigate("/")}
+                >
+                  Return to Console
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => switchRole("admin")}
+                >
+                  Switch to Super Admin (Demo)
+                </Button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

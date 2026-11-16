@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Clock,
   Calendar,
@@ -10,24 +10,24 @@ import {
   Car,
   Filter,
   FileSpreadsheet,
-} from 'lucide-react';
-import {
-  Button,
-  Badge,
-  Input,
-} from '@etherealui/react';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth-context';
-import type { Attendance, User } from '../../lib/types';
+} from "lucide-react";
+import { Button, Badge, Input } from "@etherealui/react";
+import { api } from "../../lib/api";
+import { useAuth } from "../../lib/auth-context";
+import type { Attendance, User } from "../../lib/types";
 
 export function AttendanceView() {
   const { user } = useAuth();
-  const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
+  const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(
+    null,
+  );
   const [history, setHistory] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [clockActionLoading, setClockActionLoading] = useState(false);
-  const [location, setLocation] = useState<'office' | 'remote' | 'field'>('office');
-  const [notes, setNotes] = useState('');
+  const [location, setLocation] = useState<"office" | "remote" | "field">(
+    "office",
+  );
+  const [notes, setNotes] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -37,16 +37,23 @@ export function AttendanceView() {
     return () => clearInterval(timer);
   }, []);
 
+  const isManagerOrAdmin =
+    user?.role === "admin" ||
+    user?.role === "hr_manager" ||
+    user?.role === "manager";
+
   const loadAttendance = async () => {
     try {
       const [today, hist] = await Promise.all([
         api.getTodayAttendance().catch(() => null),
-        api.getAttendanceHistory(),
+        api.getAttendanceHistory({
+          employee_id: !isManagerOrAdmin ? user?.id : undefined,
+        }),
       ]);
       setTodayAttendance(today);
       setHistory(hist);
     } catch (err) {
-      console.error('Failed to load attendance:', err);
+      console.error("Failed to load attendance:", err);
     } finally {
       setLoading(false);
     }
@@ -62,11 +69,11 @@ export function AttendanceView() {
     try {
       const updated = await api.clockIn(location, notes);
       setTodayAttendance(updated);
-      setFeedback('Successfully clocked in! Welcome to work.');
-      setNotes('');
+      setFeedback("Successfully clocked in! Welcome to work.");
+      setNotes("");
       loadAttendance();
     } catch (err: any) {
-      setFeedback(err.message || 'Clock-in failed');
+      setFeedback(err.message || "Clock-in failed");
     } finally {
       setClockActionLoading(false);
     }
@@ -78,10 +85,10 @@ export function AttendanceView() {
     try {
       const updated = await api.clockOut();
       setTodayAttendance(updated);
-      setFeedback('Successfully clocked out! Have a good rest.');
+      setFeedback("Successfully clocked out! Have a good rest.");
       loadAttendance();
     } catch (err: any) {
-      setFeedback(err.message || 'Clock-out failed');
+      setFeedback(err.message || "Clock-out failed");
     } finally {
       setClockActionLoading(false);
     }
@@ -89,12 +96,27 @@ export function AttendanceView() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'on_time':
-        return <Badge variant="primary" className="text-[10px]">On Time</Badge>;
-      case 'late':
-        return <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">Late</Badge>;
+      case "on_time":
+        return (
+          <Badge variant="primary" className="text-[10px]">
+            On Time
+          </Badge>
+        );
+      case "late":
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-amber-500 border-amber-500/30"
+          >
+            Late
+          </Badge>
+        );
       default:
-        return <Badge variant="muted" className="text-[10px]">{status}</Badge>;
+        return (
+          <Badge variant="muted" className="text-[10px]">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -103,9 +125,13 @@ export function AttendanceView() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs uppercase tracking-wider font-semibold text-primary">Time & Attendance</span>
+          <span className="text-xs uppercase tracking-wider font-semibold text-primary">
+            Time & Attendance
+          </span>
           <span className="text-muted-foreground">&bull;</span>
-          <span className="text-xs text-muted-foreground">Automated Geofencing & Work Log</span>
+          <span className="text-xs text-muted-foreground">
+            Automated Geofencing & Work Log
+          </span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Attendance Terminal & Timesheets
@@ -118,7 +144,12 @@ export function AttendanceView() {
       {feedback && (
         <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 text-foreground text-xs flex items-center justify-between">
           <span>{feedback}</span>
-          <button onClick={() => setFeedback(null)} className="text-muted-foreground hover:text-foreground">Dismiss</button>
+          <button
+            onClick={() => setFeedback(null)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -141,21 +172,28 @@ export function AttendanceView() {
               {currentTime.toLocaleTimeString([], { hour12: false })}
             </p>
             <p className="text-xs text-muted-foreground">
-              {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {currentTime.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </div>
 
           {/* Work Location Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Work Location</label>
+            <label className="text-xs font-medium text-foreground">
+              Work Location
+            </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setLocation('office')}
+                onClick={() => setLocation("office")}
                 className={`p-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition cursor-pointer ${
-                  location === 'office'
-                    ? 'border-primary bg-primary text-primary-foreground font-semibold shadow-xs'
-                    : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                  location === "office"
+                    ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "border-border bg-muted/30 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Building className="h-3.5 w-3.5" />
@@ -163,11 +201,11 @@ export function AttendanceView() {
               </button>
               <button
                 type="button"
-                onClick={() => setLocation('remote')}
+                onClick={() => setLocation("remote")}
                 className={`p-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition cursor-pointer ${
-                  location === 'remote'
-                    ? 'border-primary bg-primary text-primary-foreground font-semibold shadow-xs'
-                    : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                  location === "remote"
+                    ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "border-border bg-muted/30 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Laptop className="h-3.5 w-3.5" />
@@ -175,11 +213,11 @@ export function AttendanceView() {
               </button>
               <button
                 type="button"
-                onClick={() => setLocation('field')}
+                onClick={() => setLocation("field")}
                 className={`p-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition cursor-pointer ${
-                  location === 'field'
-                    ? 'border-primary bg-primary text-primary-foreground font-semibold shadow-xs'
-                    : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                  location === "field"
+                    ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "border-border bg-muted/30 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Car className="h-3.5 w-3.5" />
@@ -189,7 +227,9 @@ export function AttendanceView() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Work / Daily Log Note</label>
+            <label className="text-xs font-medium text-foreground">
+              Work / Daily Log Note
+            </label>
             <Input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -206,13 +246,21 @@ export function AttendanceView() {
               disabled={clockActionLoading}
               className="w-full text-xs py-2.5 font-semibold shadow-md shadow-primary/20"
             >
-              {clockActionLoading ? 'Recording Clock-In...' : 'Clock In Now'}
+              {clockActionLoading ? "Recording Clock-In..." : "Clock In Now"}
             </Button>
           ) : !todayAttendance.clock_out ? (
             <div className="space-y-2">
               <div className="p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs flex items-center justify-between">
-                <span>Clocked in at {new Date(todayAttendance.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                <Badge variant="primary" className="text-[10px]">Active Shift</Badge>
+                <span>
+                  Clocked in at{" "}
+                  {new Date(todayAttendance.clock_in).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <Badge variant="primary" className="text-[10px]">
+                  Active Shift
+                </Badge>
               </div>
               <Button
                 variant="outline"
@@ -220,7 +268,9 @@ export function AttendanceView() {
                 disabled={clockActionLoading}
                 className="w-full text-xs text-destructive hover:bg-destructive/10 border-destructive/30"
               >
-                {clockActionLoading ? 'Recording Clock-Out...' : 'Clock Out & Finalize Hours'}
+                {clockActionLoading
+                  ? "Recording Clock-Out..."
+                  : "Clock Out & Finalize Hours"}
               </Button>
             </div>
           ) : (
@@ -239,31 +289,51 @@ export function AttendanceView() {
         {/* Attendance Summary Telemetry */}
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
-            <h2 className="text-base font-bold text-card-foreground">Shift Performance & Hours Telemetry</h2>
-            <p className="text-xs text-muted-foreground">Month-to-date calculation based on standard 8-hour workday</p>
+            <h2 className="text-base font-bold text-card-foreground">
+              Shift Performance & Hours Telemetry
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Month-to-date calculation based on standard 8-hour workday
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">Standard Hours</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Standard Hours
+              </p>
               <p className="text-xl font-bold text-foreground">168.0 hrs</p>
-              <p className="text-[10px] text-emerald-500 font-semibold">100% Target Met</p>
+              <p className="text-[10px] text-emerald-500 font-semibold">
+                100% Target Met
+              </p>
             </div>
             <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">Punctuality Score</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Punctuality Score
+              </p>
               <p className="text-xl font-bold text-foreground">98.2%</p>
-              <p className="text-[10px] text-primary font-semibold">Top 5% Tier</p>
+              <p className="text-[10px] text-primary font-semibold">
+                Top 5% Tier
+              </p>
             </div>
             <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">Overtime Accrued</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Overtime Accrued
+              </p>
               <p className="text-xl font-bold text-foreground">12.5 hrs</p>
-              <p className="text-[10px] text-indigo-400 font-semibold">Eligible for Payout</p>
+              <p className="text-[10px] text-indigo-400 font-semibold">
+                Eligible for Payout
+              </p>
             </div>
           </div>
 
           <div className="p-3 rounded-xl border border-border bg-muted/30 text-xs flex items-center justify-between">
-            <span className="text-muted-foreground">Company Standard Policy: Core hours 09:00 - 18:00 WIB</span>
-            <Badge variant="outline" className="text-[10px]">Strict Grace: 15 mins</Badge>
+            <span className="text-muted-foreground">
+              Company Standard Policy: Core hours 09:00 - 18:00 WIB
+            </span>
+            <Badge variant="outline" className="text-[10px]">
+              Strict Grace: 15 mins
+            </Badge>
           </div>
         </div>
       </div>
@@ -272,10 +342,18 @@ export function AttendanceView() {
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-card-foreground">Attendance Records & Logs</h2>
-            <p className="text-xs text-muted-foreground">Daily clock entries and location tags</p>
+            <h2 className="text-base font-bold text-card-foreground">
+              Attendance Records & Logs
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Daily clock entries and location tags
+            </p>
           </div>
-          <Button variant="outline" size="sm" className="text-xs flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs flex items-center gap-1.5"
+          >
             <FileSpreadsheet className="h-3.5 w-3.5" />
             <span>Export Timesheet</span>
           </Button>
@@ -299,16 +377,30 @@ export function AttendanceView() {
               {history.length > 0 ? (
                 history.map((att) => (
                   <tr key={att.id} className="hover:bg-muted/30 transition">
-                    <td className="py-3 px-4 font-mono font-medium text-foreground">{att.date}</td>
-                    <td className="py-3 px-4 font-semibold text-foreground">{att.employee_name || user?.full_name}</td>
-                    <td className="py-3 px-4 font-mono text-muted-foreground">
-                      {att.clock_in ? new Date(att.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                    <td className="py-3 px-4 font-mono font-medium text-foreground">
+                      {att.date}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-foreground">
+                      {att.employee_name || user?.full_name}
                     </td>
                     <td className="py-3 px-4 font-mono text-muted-foreground">
-                      {att.clock_out ? new Date(att.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active'}
+                      {att.clock_in
+                        ? new Date(att.clock_in).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "-"}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-muted-foreground">
+                      {att.clock_out
+                        ? new Date(att.clock_out).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "Active"}
                     </td>
                     <td className="py-3 px-4 font-mono font-semibold text-foreground">
-                      {att.total_hours > 0 ? `${att.total_hours} hrs` : '-'}
+                      {att.total_hours > 0 ? `${att.total_hours} hrs` : "-"}
                     </td>
                     <td className="py-3 px-4 capitalize">
                       <span className="flex items-center gap-1 text-muted-foreground">
@@ -316,17 +408,18 @@ export function AttendanceView() {
                         <span>{att.work_location}</span>
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(att.status)}
-                    </td>
+                    <td className="py-3 px-4">{getStatusBadge(att.status)}</td>
                     <td className="py-3 px-4 text-muted-foreground truncate max-w-xs">
-                      {att.notes || '-'}
+                      {att.notes || "-"}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-xs text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="py-8 text-center text-xs text-muted-foreground"
+                  >
                     No attendance records found.
                   </td>
                 </tr>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   CalendarOff,
   Plus,
@@ -10,16 +10,11 @@ import {
   FileCheck,
   Check,
   X,
-} from 'lucide-react';
-import {
-  Button,
-  Badge,
-  Input,
-  Textarea,
-} from '@etherealui/react';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth-context';
-import type { LeaveType, LeaveBalance, LeaveRequest } from '../../lib/types';
+} from "lucide-react";
+import { Button, Badge, Input, Textarea } from "@etherealui/react";
+import { api } from "../../lib/api";
+import { useAuth } from "../../lib/auth-context";
+import type { LeaveType, LeaveBalance, LeaveRequest } from "../../lib/types";
 
 export function LeaveView() {
   const { user } = useAuth();
@@ -31,22 +26,30 @@ export function LeaveView() {
   // New Request Form Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRequest, setNewRequest] = useState({
-    leave_type_id: '',
-    start_date: '',
-    end_date: '',
+    leave_type_id: "",
+    start_date: "",
+    end_date: "",
     total_days: 1,
-    reason: '',
+    reason: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStatus, setFilterStatus] = useState("");
+
+  const isManagerOrAdmin =
+    user?.role === "admin" ||
+    user?.role === "hr_manager" ||
+    user?.role === "manager";
 
   const loadData = async () => {
     try {
       const [balList, typeList, reqList] = await Promise.all([
-        api.getLeaveBalances(),
+        api.getLeaveBalances(user?.id),
         api.getLeaveTypes(),
-        api.getLeaveRequests({ status: filterStatus || undefined }),
+        api.getLeaveRequests({
+          status: filterStatus || undefined,
+          employee_id: !isManagerOrAdmin ? user?.id : undefined,
+        }),
       ]);
       setBalances(balList);
       setTypes(typeList);
@@ -55,7 +58,7 @@ export function LeaveView() {
         setNewRequest((prev) => ({ ...prev, leave_type_id: typeList[0].id }));
       }
     } catch (err) {
-      console.error('Failed to load leave data:', err);
+      console.error("Failed to load leave data:", err);
     } finally {
       setLoading(false);
     }
@@ -72,42 +75,64 @@ export function LeaveView() {
       await api.createLeaveRequest(newRequest);
       setIsModalOpen(false);
       setNewRequest({
-        leave_type_id: types[0]?.id || '',
-        start_date: '',
-        end_date: '',
+        leave_type_id: types[0]?.id || "",
+        start_date: "",
+        end_date: "",
         total_days: 1,
-        reason: '',
+        reason: "",
       });
       loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to submit leave request');
+      alert(err.message || "Failed to submit leave request");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
+  const handleUpdateStatus = async (
+    id: string,
+    status: "approved" | "rejected",
+  ) => {
     setActionLoading(id);
     try {
-      await api.updateLeaveRequestStatus(id, status, status === 'approved' ? 'Approved by manager' : 'Declined per operational schedule');
+      await api.updateLeaveRequestStatus(
+        id,
+        status,
+        status === "approved"
+          ? "Approved by manager"
+          : "Declined per operational schedule",
+      );
       loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to update leave request');
+      alert(err.message || "Failed to update leave request");
     } finally {
       setActionLoading(null);
     }
   };
 
-  const isManagerOrAdmin = user?.role === 'admin' || user?.role === 'hr_manager' || user?.role === 'manager';
-
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
-        return <Badge variant="primary" className="text-[10px]">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">Rejected</Badge>;
+      case "approved":
+        return (
+          <Badge variant="primary" className="text-[10px]">
+            Approved
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge
+            variant="outline"
+            className="text-[10px] text-destructive border-destructive/30"
+          >
+            Rejected
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary" className="text-[10px]">Pending Approval</Badge>;
+        return (
+          <Badge variant="secondary" className="text-[10px]">
+            Pending Approval
+          </Badge>
+        );
     }
   };
 
@@ -117,15 +142,20 @@ export function LeaveView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs uppercase tracking-wider font-semibold text-primary">Time-Off & Leave</span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-primary">
+              Time-Off & Leave
+            </span>
             <span className="text-muted-foreground">&bull;</span>
-            <span className="text-xs text-muted-foreground">Accrual Year 2026</span>
+            <span className="text-xs text-muted-foreground">
+              Accrual Year 2026
+            </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Leave & Absence Management
           </h1>
           <p className="text-xs text-muted-foreground">
-            Leave balance allocation, vacation scheduling, and manager approval flows.
+            Leave balance allocation, vacation scheduling, and manager approval
+            flows.
           </p>
         </div>
 
@@ -143,20 +173,32 @@ export function LeaveView() {
       {/* Balance Quota Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {balances.map((b) => (
-          <div key={b.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <div
+            key={b.id}
+            className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-card-foreground truncate">{b.leave_type_name}</span>
-              <Badge variant="outline" className="text-[10px] font-mono">{b.year}</Badge>
+              <span className="text-xs font-semibold text-card-foreground truncate">
+                {b.leave_type_name}
+              </span>
+              <Badge variant="outline" className="text-[10px] font-mono">
+                {b.year}
+              </Badge>
             </div>
 
             <div>
               <p className="text-2xl font-bold tracking-tight text-foreground">
-                {b.remaining_days} <span className="text-xs font-normal text-muted-foreground">days left</span>
+                {b.remaining_days}{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  days left
+                </span>
               </p>
               <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
                 <div
                   className="bg-primary h-1.5 rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (b.used_days / (b.total_days || 1)) * 100)}%` }}
+                  style={{
+                    width: `${Math.min(100, (b.used_days / (b.total_days || 1)) * 100)}%`,
+                  }}
                 ></div>
               </div>
             </div>
@@ -174,8 +216,12 @@ export function LeaveView() {
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-card-foreground">Leave Requests & Approvals</h2>
-            <p className="text-xs text-muted-foreground">Historical records and pending review requests</p>
+            <h2 className="text-base font-bold text-card-foreground">
+              Leave Requests & Approvals
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Historical records and pending review requests
+            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -210,24 +256,38 @@ export function LeaveView() {
                 requests.map((req) => (
                   <tr key={req.id} className="hover:bg-muted/30 transition">
                     <td className="py-3 px-4">
-                      <p className="font-semibold text-foreground">{req.employee_name || 'Staff'}</p>
-                      <p className="text-[11px] text-muted-foreground">{req.department_name || 'Software Engineering'}</p>
+                      <p className="font-semibold text-foreground">
+                        {req.employee_name || "Staff"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {req.department_name || "Software Engineering"}
+                      </p>
                     </td>
-                    <td className="py-3 px-4 font-medium text-foreground">{req.leave_type_name}</td>
+                    <td className="py-3 px-4 font-medium text-foreground">
+                      {req.leave_type_name}
+                    </td>
                     <td className="py-3 px-4 font-mono text-muted-foreground">
-                      {req.start_date} <span className="text-muted-foreground/60">&rarr;</span> {req.end_date}
+                      {req.start_date}{" "}
+                      <span className="text-muted-foreground/60">&rarr;</span>{" "}
+                      {req.end_date}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-foreground">{req.total_days} days</td>
-                    <td className="py-3 px-4 text-muted-foreground max-w-xs truncate">{req.reason}</td>
+                    <td className="py-3 px-4 font-semibold text-foreground">
+                      {req.total_days} days
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground max-w-xs truncate">
+                      {req.reason}
+                    </td>
                     <td className="py-3 px-4">{getStatusBadge(req.status)}</td>
                     <td className="py-3 px-4 text-right">
-                      {req.status === 'pending' && isManagerOrAdmin ? (
+                      {req.status === "pending" && isManagerOrAdmin ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <Button
                             size="sm"
                             variant="primary"
                             disabled={actionLoading === req.id}
-                            onClick={() => handleUpdateStatus(req.id, 'approved')}
+                            onClick={() =>
+                              handleUpdateStatus(req.id, "approved")
+                            }
                             className="h-7 px-2 text-[11px] flex items-center gap-1"
                           >
                             <Check className="h-3 w-3" />
@@ -237,7 +297,9 @@ export function LeaveView() {
                             size="sm"
                             variant="outline"
                             disabled={actionLoading === req.id}
-                            onClick={() => handleUpdateStatus(req.id, 'rejected')}
+                            onClick={() =>
+                              handleUpdateStatus(req.id, "rejected")
+                            }
                             className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 flex items-center gap-1"
                           >
                             <X className="h-3 w-3" />
@@ -246,7 +308,9 @@ export function LeaveView() {
                         </div>
                       ) : (
                         <span className="text-[11px] text-muted-foreground font-mono">
-                          {req.approved_at ? new Date(req.approved_at).toLocaleDateString() : '-'}
+                          {req.approved_at
+                            ? new Date(req.approved_at).toLocaleDateString()
+                            : "-"}
                         </span>
                       )}
                     </td>
@@ -254,7 +318,10 @@ export function LeaveView() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
+                  <td
+                    colSpan={7}
+                    className="py-8 text-center text-xs text-muted-foreground"
+                  >
                     No leave requests found.
                   </td>
                 </tr>
@@ -269,7 +336,9 @@ export function LeaveView() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-card-foreground">Submit Leave Request</h2>
+              <h2 className="text-base font-bold text-card-foreground">
+                Submit Leave Request
+              </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
@@ -280,62 +349,93 @@ export function LeaveView() {
 
             <form onSubmit={handleCreateRequest} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">Leave Type *</label>
+                <label className="text-xs font-medium text-foreground">
+                  Leave Type *
+                </label>
                 <select
                   required
                   value={newRequest.leave_type_id}
-                  onChange={(e) => setNewRequest({ ...newRequest, leave_type_id: e.target.value })}
+                  onChange={(e) =>
+                    setNewRequest({
+                      ...newRequest,
+                      leave_type_id: e.target.value,
+                    })
+                  }
                   className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground"
                 >
                   {types.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name} (Max {t.max_days_per_year}d/yr)</option>
+                    <option key={t.id} value={t.id}>
+                      {t.name} (Max {t.max_days_per_year}d/yr)
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">Start Date *</label>
+                  <label className="text-xs font-medium text-foreground">
+                    Start Date *
+                  </label>
                   <Input
                     type="date"
                     required
                     value={newRequest.start_date}
-                    onChange={(e) => setNewRequest({ ...newRequest, start_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewRequest({
+                        ...newRequest,
+                        start_date: e.target.value,
+                      })
+                    }
                     className="text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">End Date *</label>
+                  <label className="text-xs font-medium text-foreground">
+                    End Date *
+                  </label>
                   <Input
                     type="date"
                     required
                     value={newRequest.end_date}
-                    onChange={(e) => setNewRequest({ ...newRequest, end_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewRequest({ ...newRequest, end_date: e.target.value })
+                    }
                     className="text-xs"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">Total Working Days *</label>
+                <label className="text-xs font-medium text-foreground">
+                  Total Working Days *
+                </label>
                 <Input
                   type="number"
                   min="1"
                   max="90"
                   required
                   value={newRequest.total_days}
-                  onChange={(e) => setNewRequest({ ...newRequest, total_days: parseInt(e.target.value) || 1 })}
+                  onChange={(e) =>
+                    setNewRequest({
+                      ...newRequest,
+                      total_days: parseInt(e.target.value) || 1,
+                    })
+                  }
                   className="text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">Reason & Coverage Handover *</label>
+                <label className="text-xs font-medium text-foreground">
+                  Reason & Coverage Handover *
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={newRequest.reason}
-                  onChange={(e) => setNewRequest({ ...newRequest, reason: e.target.value })}
+                  onChange={(e) =>
+                    setNewRequest({ ...newRequest, reason: e.target.value })
+                  }
                   placeholder="Provide context, emergency contact, or handover colleague..."
                   className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
@@ -358,7 +458,7 @@ export function LeaveView() {
                   disabled={submitting}
                   className="text-xs shadow-md shadow-primary/20"
                 >
-                  {submitting ? 'Submitting...' : 'Send Request for Approval'}
+                  {submitting ? "Submitting..." : "Send Request for Approval"}
                 </Button>
               </div>
             </form>
