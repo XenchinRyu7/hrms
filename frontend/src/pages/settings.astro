@@ -1,0 +1,14 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { AuthProvider } from '../lib/auth-context';
+import { HRMSAppShell } from '../components/layout/HRMSAppShell';
+import { SettingsView } from '../components/views/SettingsView';
+---
+
+<RootLayout title="System Settings & RBAC — Ethereal HRMS">
+  <AuthProvider client:only="react">
+    <HRMSAppShell client:only="react" activePath="/settings">
+      <SettingsView client:only="react" />
+    </HRMSAppShell>
+  </AuthProvider>
+</RootLayout>
