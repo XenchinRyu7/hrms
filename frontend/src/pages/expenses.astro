@@ -1,0 +1,14 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { AuthProvider } from '../lib/auth-context';
+import { HRMSAppShell } from '../components/layout/HRMSAppShell';
+import { ExpensesView } from '../components/views/ExpensesView';
+---
+
+<RootLayout title="Expenses & Reimbursements — Ethereal HRMS">
+  <AuthProvider client:only="react">
+    <HRMSAppShell client:only="react" activePath="/expenses">
+      <ExpensesView client:only="react" />
+    </HRMSAppShell>
+  </AuthProvider>
+</RootLayout>
