@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@etherealui/react/styles.css";
+
+/* Font definitions & base smoothing */
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
