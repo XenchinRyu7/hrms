@@ -1,0 +1,14 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { AuthProvider } from '../lib/auth-context';
+import { HRMSAppShell } from '../components/layout/HRMSAppShell';
+import { AuditView } from '../components/views/AuditView';
+---
+
+<RootLayout title="Compliance & Audit Logs — Ethereal HRMS">
+  <AuthProvider client:only="react">
+    <HRMSAppShell client:only="react" activePath="/audit">
+      <AuditView client:only="react" />
+    </HRMSAppShell>
+  </AuthProvider>
+</RootLayout>
