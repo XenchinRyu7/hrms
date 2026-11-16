@@ -1,0 +1,9 @@
+# GitHub Sponsors & Open Source Funding Configuration
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+github: [user] # Replace with your GitHub handle or organization
+patreon: ethereal-hrms
+open_collective: ethereal-enterprise
+ko_fi: ethereal_hrms
+buy_me_a_coffee: etherealhrms
+custom: ['https://ethereal-ui.dev/sponsor']

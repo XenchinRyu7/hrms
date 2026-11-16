@@ -1,0 +1,28 @@
+name: Supabase Database Keep-Alive
+
+on:
+  schedule:
+    # Run every 3 days at 00:00 UTC to prevent Supabase 7-day auto-pause
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase PostgreSQL
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Ping Supabase via PostgreSQL or Webhook
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Executing Supabase keep-alive ping..."
+          if [ -n "$DATABASE_URL" ]; then
+            sudo apt-get install -y postgresql-client
+            psql "$DATABASE_URL" -c "SELECT 1 as keepalive_ping;"
+            echo "✅ Supabase PostgreSQL ping succeeded!"
+          else
+            echo "ℹ️ Note: Set DATABASE_URL secret in GitHub repo to enable automatic cloud cron pings."
+          fi
