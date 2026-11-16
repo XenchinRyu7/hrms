@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Target,
   Award,
@@ -10,16 +10,11 @@ import {
   Sparkles,
   X,
   Edit2,
-} from 'lucide-react';
-import {
-  Button,
-  Badge,
-  Input,
-  Progress,
-} from '@etherealui/react';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth-context';
-import type { PerformanceCycle, PerformanceGoal } from '../../lib/types';
+} from "lucide-react";
+import { Button, Badge, Input, Progress } from "@etherealui/react";
+import { api } from "../../lib/api";
+import { useAuth } from "../../lib/auth-context";
+import type { PerformanceCycle, PerformanceGoal } from "../../lib/types";
 
 export function PerformanceView() {
   const { user } = useAuth();
@@ -30,26 +25,33 @@ export function PerformanceView() {
   // New Goal Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({
-    title: '',
-    description: '',
-    category: 'OKR',
-    metric_type: 'percentage',
+    title: "",
+    description: "",
+    category: "OKR",
+    metric_type: "percentage",
     target_value: 100,
     current_value: 0,
     weight: 30,
-    status: 'in_progress' as const,
+    status: "in_progress" as const,
   });
+
+  const isManagerOrAdmin =
+    user?.role === "admin" ||
+    user?.role === "hr_manager" ||
+    user?.role === "manager";
 
   const loadPerformanceData = async () => {
     try {
       const [cycList, goalList] = await Promise.all([
         api.getPerformanceCycles(),
-        api.getPerformanceGoals(),
+        api.getPerformanceGoals({
+          employee_id: !isManagerOrAdmin ? user?.id : undefined,
+        }),
       ]);
       setCycles(cycList);
       setGoals(goalList);
     } catch (err) {
-      console.error('Failed to load performance goals:', err);
+      console.error("Failed to load performance goals:", err);
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,13 @@ export function PerformanceView() {
     loadPerformanceData();
   }, []);
 
-  const handleUpdateProgress = async (goal: PerformanceGoal, newVal: number) => {
+  const handleUpdateProgress = async (
+    goal: PerformanceGoal,
+    newVal: number,
+  ) => {
     try {
-      const updatedStatus = newVal >= goal.target_value ? 'completed' : 'in_progress';
+      const updatedStatus =
+        newVal >= goal.target_value ? "completed" : "in_progress";
       await api.updatePerformanceGoal(goal.id, {
         ...goal,
         current_value: newVal,
@@ -69,7 +75,7 @@ export function PerformanceView() {
       });
       loadPerformanceData();
     } catch (err: any) {
-      alert(err.message || 'Failed to update goal');
+      alert(err.message || "Failed to update goal");
     }
   };
 
@@ -80,32 +86,32 @@ export function PerformanceView() {
       await api.createPerformanceGoal({
         ...newGoal,
         cycle_id: cycles[0].id,
-        employee_id: user?.id || 'emp-4',
+        employee_id: user?.id || "emp-4",
         score: 4.0,
       });
       setIsModalOpen(false);
       setNewGoal({
-        title: '',
-        description: '',
-        category: 'OKR',
-        metric_type: 'percentage',
+        title: "",
+        description: "",
+        category: "OKR",
+        metric_type: "percentage",
         target_value: 100,
         current_value: 0,
         weight: 30,
-        status: 'in_progress',
+        status: "in_progress",
       });
       loadPerformanceData();
     } catch (err: any) {
-      alert(err.message || 'Failed to create goal');
+      alert(err.message || "Failed to create goal");
     }
   };
 
   const activeCycle = cycles[0] || {
-    title: 'Q4 2026 Enterprise Growth & Review',
-    quarter: 'Q4',
+    title: "Q4 2026 Enterprise Growth & Review",
+    quarter: "Q4",
     year: 2026,
-    start_date: '2026-10-01',
-    end_date: '2026-12-31',
+    start_date: "2026-10-01",
+    end_date: "2026-12-31",
   };
 
   return (
@@ -114,15 +120,20 @@ export function PerformanceView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs uppercase tracking-wider font-semibold text-primary">Performance & Talent</span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-primary">
+              Performance & Talent
+            </span>
             <span className="text-muted-foreground">&bull;</span>
-            <span className="text-xs text-muted-foreground">{activeCycle.quarter} {activeCycle.year} Review Cycle</span>
+            <span className="text-xs text-muted-foreground">
+              {activeCycle.quarter} {activeCycle.year} Review Cycle
+            </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Goals, OKRs & Performance Reviews
           </h1>
           <p className="text-xs text-muted-foreground">
-            Strategic alignment, measurable key results, and periodic continuous feedback.
+            Strategic alignment, measurable key results, and periodic continuous
+            feedback.
           </p>
         </div>
 
@@ -141,11 +152,16 @@ export function PerformanceView() {
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-card-foreground">{activeCycle.title}</h2>
-            <Badge variant="primary" className="text-[10px]">Active Evaluation</Badge>
+            <h2 className="text-base font-bold text-card-foreground">
+              {activeCycle.title}
+            </h2>
+            <Badge variant="primary" className="text-[10px]">
+              Active Evaluation
+            </Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Evaluation Window: {activeCycle.start_date} &bull; Deadline: {activeCycle.end_date}
+            Evaluation Window: {activeCycle.start_date} &bull; Deadline:{" "}
+            {activeCycle.end_date}
           </p>
         </div>
 
@@ -163,59 +179,86 @@ export function PerformanceView() {
 
       {/* OKR & Goals List */}
       <div className="space-y-4">
-        <h2 className="text-base font-bold text-foreground">Active Goals & Key Deliverables</h2>
+        <h2 className="text-base font-bold text-foreground">
+          Active Goals & Key Deliverables
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((g) => {
-            const pct = Math.min(100, Math.round((g.current_value / (g.target_value || 1)) * 100));
+            const pct = Math.min(
+              100,
+              Math.round((g.current_value / (g.target_value || 1)) * 100),
+            );
             return (
-              <div key={g.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4 flex flex-col justify-between">
+              <div
+                key={g.id}
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4 flex flex-col justify-between"
+              >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={g.category === 'OKR' ? 'primary' : 'outline'} className="text-[10px]">
+                        <Badge
+                          variant={g.category === "OKR" ? "primary" : "outline"}
+                          className="text-[10px]"
+                        >
                           {g.category}
                         </Badge>
-                        <span className="text-[11px] text-muted-foreground font-mono">Weight: {g.weight}%</span>
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          Weight: {g.weight}%
+                        </span>
                       </div>
-                      <h3 className="font-bold text-sm text-foreground mt-1.5">{g.title}</h3>
+                      <h3 className="font-bold text-sm text-foreground mt-1.5">
+                        {g.title}
+                      </h3>
                     </div>
 
                     <Badge
-                      variant={g.status === 'completed' ? 'primary' : 'secondary'}
+                      variant={
+                        g.status === "completed" ? "primary" : "secondary"
+                      }
                       className="text-[10px] capitalize shrink-0"
                     >
-                      {g.status.replace('_', ' ')}
+                      {g.status.replace("_", " ")}
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">{g.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {g.description}
+                  </p>
                 </div>
 
                 {/* Progress bar and slider */}
                 <div className="space-y-2 pt-2 border-t border-border">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Progress Completion</span>
-                    <span className="font-mono font-bold text-foreground">{pct}% ({g.current_value}/{g.target_value})</span>
+                    <span className="text-muted-foreground">
+                      Progress Completion
+                    </span>
+                    <span className="font-mono font-bold text-foreground">
+                      {pct}% ({g.current_value}/{g.target_value})
+                    </span>
                   </div>
 
                   <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                     <div
-                      className={`h-2 rounded-full transition-all ${pct >= 100 ? 'bg-emerald-500' : 'bg-primary'}`}
+                      className={`h-2 rounded-full transition-all ${pct >= 100 ? "bg-emerald-500" : "bg-primary"}`}
                       style={{ width: `${pct}%` }}
                     ></div>
                   </div>
 
                   {/* Interactive Progress Slider */}
                   <div className="pt-2 flex items-center gap-3">
-                    <span className="text-[11px] text-muted-foreground shrink-0">Update:</span>
+                    <span className="text-[11px] text-muted-foreground shrink-0">
+                      Update:
+                    </span>
                     <input
                       type="range"
                       min="0"
                       max="100"
                       value={g.current_value}
-                      onChange={(e) => handleUpdateProgress(g, parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleUpdateProgress(g, parseInt(e.target.value))
+                      }
                       className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                   </div>
@@ -229,10 +272,15 @@ export function PerformanceView() {
                         <Award className="h-3.5 w-3.5 text-primary" />
                         <span>Rating Score: {g.score} / 5.0</span>
                       </span>
-                      <span className="text-[10px] text-emerald-500 font-semibold">Exceeds Expectations</span>
+                      <span className="text-[10px] text-emerald-500 font-semibold">
+                        Exceeds Expectations
+                      </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      "{g.manager_feedback || 'Consistently delivers resilient microservice architectures with zero downtime.'}"
+                      "
+                      {g.manager_feedback ||
+                        "Consistently delivers resilient microservice architectures with zero downtime."}
+                      "
                     </p>
                   </div>
                 )}
@@ -247,7 +295,9 @@ export function PerformanceView() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-card-foreground">Add New OKR / Goal</h2>
+              <h2 className="text-base font-bold text-card-foreground">
+                Add New OKR / Goal
+              </h2>
               <button onClick={() => setIsModalOpen(false)}>
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -255,11 +305,15 @@ export function PerformanceView() {
 
             <form onSubmit={handleCreateGoal} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">Goal Title *</label>
+                <label className="text-xs font-medium text-foreground">
+                  Goal Title *
+                </label>
                 <Input
                   required
                   value={newGoal.title}
-                  onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewGoal({ ...newGoal, title: e.target.value })
+                  }
                   placeholder="e.g. Reduce CI/CD deployment cycle to < 5 mins"
                   className="text-xs"
                 />
@@ -267,10 +321,14 @@ export function PerformanceView() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">Category</label>
+                  <label className="text-xs font-medium text-foreground">
+                    Category
+                  </label>
                   <select
                     value={newGoal.category}
-                    onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
+                    onChange={(e) =>
+                      setNewGoal({ ...newGoal, category: e.target.value })
+                    }
                     className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
                   >
                     <option value="OKR">Strategic OKR</option>
@@ -279,32 +337,52 @@ export function PerformanceView() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">Weight (%)</label>
+                  <label className="text-xs font-medium text-foreground">
+                    Weight (%)
+                  </label>
                   <Input
                     type="number"
                     min="10"
                     max="100"
                     value={newGoal.weight}
-                    onChange={(e) => setNewGoal({ ...newGoal, weight: parseInt(e.target.value) || 20 })}
+                    onChange={(e) =>
+                      setNewGoal({
+                        ...newGoal,
+                        weight: parseInt(e.target.value) || 20,
+                      })
+                    }
                     className="text-xs"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">Description & Key Milestones</label>
+                <label className="text-xs font-medium text-foreground">
+                  Description & Key Milestones
+                </label>
                 <textarea
                   rows={3}
                   value={newGoal.description}
-                  onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewGoal({ ...newGoal, description: e.target.value })
+                  }
                   placeholder="Concrete measurable deliverables..."
                   className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
                 />
               </div>
 
               <div className="pt-3 border-t border-border flex justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                <Button type="submit" variant="primary" size="sm">Save Goal</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" size="sm">
+                  Save Goal
+                </Button>
               </div>
             </form>
           </div>
