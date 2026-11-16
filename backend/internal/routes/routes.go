@@ -24,10 +24,11 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 	perfH := handlers.NewPerformanceHandler(store)
 	expH := handlers.NewExpenseHandler(store)
 	auditH := handlers.NewAuditHandler(store)
+	sysH := handlers.NewSystemHandler()
 
 	api := r.Group("/api/v1")
 	{
-		// Health check
+		// Health & System Keep-Alive
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{
 				"status":    "healthy",
@@ -36,6 +37,9 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 				"ui_engine": "Ethereal UI v0.0.7",
 			})
 		})
+		api.GET("/system/status", sysH.GetStatus)
+		api.GET("/system/db-ping", sysH.TriggerPing)
+		api.POST("/system/keepalive", sysH.TriggerPing)
 
 		// Public Auth
 		api.POST("/auth/login", authH.Login)
