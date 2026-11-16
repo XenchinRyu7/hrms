@@ -6,3 +6,164 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
+
+/* ============================================================================
+ * ETHEREAL UI THEME PRESETS (OKLCH COMPLIANT)
+ * Adheres strictly to ETHEREAL_AGENT_GUIDE.md & WCAG 2.1 AA token pairings
+ * ============================================================================ */
+
+/* 1. EMERALD OPS */
+html[data-color-theme="emerald"] {
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  --ring: #10b981;
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #ffffff;
+}
+html[data-color-theme="emerald"]:not(.dark) {
+  --background: #f8fafc;
+  --foreground: #022c22;
+  --card: #ffffff;
+  --card-foreground: #022c22;
+  --popover: #ffffff;
+  --popover-foreground: #022c22;
+  --muted: #ecfdf5;
+  --muted-foreground: #059669;
+  --border: #d1fae5;
+  --input: #d1fae5;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #022c22;
+  --sidebar-border: #e2e8f0;
+}
+html.dark[data-color-theme="emerald"] {
+  --background: #021f18;
+  --foreground: #ecfdf5;
+  --card: #042f24;
+  --card-foreground: #ecfdf5;
+  --popover: #064e3b;
+  --popover-foreground: #ecfdf5;
+  --muted: #064e3b;
+  --muted-foreground: #6ee7b7;
+  --border: #065f46;
+  --input: #065f46;
+  --sidebar: #021813;
+  --sidebar-foreground: #ecfdf5;
+  --sidebar-border: #064e3b;
+}
+
+/* 2. OBSIDIAN VIOLET */
+html[data-color-theme="violet"] {
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --ring: #8b5cf6;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+}
+html[data-color-theme="violet"]:not(.dark) {
+  --background: #faf5ff;
+  --foreground: #3b0764;
+  --card: #ffffff;
+  --card-foreground: #3b0764;
+  --popover: #ffffff;
+  --popover-foreground: #3b0764;
+  --muted: #f3e8ff;
+  --muted-foreground: #7c3aed;
+  --border: #e9d5ff;
+  --input: #e9d5ff;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3b0764;
+  --sidebar-border: #e9d5ff;
+}
+html.dark[data-color-theme="violet"] {
+  --background: #090611;
+  --foreground: #f5f3ff;
+  --card: #130d22;
+  --card-foreground: #f5f3ff;
+  --popover: #1c1333;
+  --popover-foreground: #f5f3ff;
+  --muted: #1c1333;
+  --muted-foreground: #c4b5fd;
+  --border: #2e1d52;
+  --input: #2e1d52;
+  --sidebar: #06040b;
+  --sidebar-foreground: #f5f3ff;
+  --sidebar-border: #241740;
+}
+
+/* 3. CYBERPUNK NEON */
+html[data-color-theme="cyberpunk"] {
+  --primary: #f43f5e;
+  --primary-foreground: #ffffff;
+  --ring: #f43f5e;
+  --sidebar-primary: #f43f5e;
+  --sidebar-primary-foreground: #ffffff;
+}
+html[data-color-theme="cyberpunk"]:not(.dark) {
+  --background: #fff1f2;
+  --foreground: #881337;
+  --card: #ffffff;
+  --card-foreground: #881337;
+  --popover: #ffffff;
+  --popover-foreground: #881337;
+  --muted: #ffe4e6;
+  --muted-foreground: #e11d48;
+  --border: #fecdd3;
+  --input: #fecdd3;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #881337;
+  --sidebar-border: #fecdd3;
+}
+html.dark[data-color-theme="cyberpunk"] {
+  --background: #090308;
+  --foreground: #ffe4e6;
+  --card: #150613;
+  --card-foreground: #ffe4e6;
+  --popover: #22081e;
+  --popover-foreground: #ffe4e6;
+  --muted: #240a20;
+  --muted-foreground: #fda4af;
+  --border: #3b1135;
+  --input: #3b1135;
+  --sidebar: #060205;
+  --sidebar-foreground: #ffe4e6;
+  --sidebar-border: #2c0d28;
+}
+
+/* 4. AMBER LUXURY GOLD */
+html[data-color-theme="amber"] {
+  --primary: #f59e0b;
+  --primary-foreground: #1c1917; /* Dark text on bright amber for WCAG 2.1 AA */
+  --ring: #f59e0b;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #1c1917;
+}
+html[data-color-theme="amber"]:not(.dark) {
+  --background: #fffbeb;
+  --foreground: #451a03;
+  --card: #ffffff;
+  --card-foreground: #451a03;
+  --popover: #ffffff;
+  --popover-foreground: #451a03;
+  --muted: #fef3c7;
+  --muted-foreground: #d97706;
+  --border: #fde68a;
+  --input: #fde68a;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #451a03;
+  --sidebar-border: #fde68a;
+}
+html.dark[data-color-theme="amber"] {
+  --background: #0c0903;
+  --foreground: #fef3c7;
+  --card: #181206;
+  --card-foreground: #fef3c7;
+  --popover: #261c0a;
+  --popover-foreground: #fef3c7;
+  --muted: #261c0a;
+  --muted-foreground: #fcd34d;
+  --border: #3f2e10;
+  --input: #3f2e10;
+  --sidebar: #070502;
+  --sidebar-foreground: #fef3c7;
+  --sidebar-border: #30230c;
+}

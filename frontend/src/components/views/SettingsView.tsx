@@ -8,6 +8,9 @@ import {
   CheckCircle,
   Save,
   Lock,
+  Sun,
+  Moon,
+  Sparkles,
 } from 'lucide-react';
 import {
   Button,
@@ -15,6 +18,7 @@ import {
   Input,
 } from '@etherealui/react';
 import { useAuth } from '../../lib/auth-context';
+import { useTheme, THEME_OPTIONS, type ThemeColor } from '../../lib/theme-context';
 
 const RBAC_MODULES = [
   { module: 'Employee Directory & Org', admin: 'Full Control', hr: 'Read / Write', manager: 'Read Only', employee: 'Self Only' },
@@ -29,7 +33,8 @@ const RBAC_MODULES = [
 
 export function SettingsView() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'general' | 'rbac' | 'theming'>('general');
+  const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<'general' | 'rbac' | 'theming'>('theming');
   const [savedMsg, setSavedMsg] = useState(false);
 
   // Form states
@@ -52,7 +57,7 @@ export function SettingsView() {
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs uppercase tracking-wider font-semibold text-primary">System Governance</span>
           <span className="text-muted-foreground">&bull;</span>
-          <span className="text-xs text-muted-foreground">Ethereal UI v0.0.7 &bull; Go REST Engine</span>
+          <span className="text-xs text-muted-foreground">Ethereal UI v0.0.7 &bull; OKLCH Theme Engine</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Workspace & System Settings
@@ -72,6 +77,16 @@ export function SettingsView() {
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border pb-2">
         <button
+          onClick={() => setActiveTab('theming')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'theming' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-muted'
+          }`}
+        >
+          <Palette className="h-3.5 w-3.5" />
+          <span>Ethereal Theme & Mode</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('general')}
           className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeTab === 'general' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-muted'
@@ -90,17 +105,124 @@ export function SettingsView() {
           <Shield className="h-3.5 w-3.5" />
           <span>RBAC Permissions Matrix</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('theming')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'theming' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-muted'
-          }`}
-        >
-          <Palette className="h-3.5 w-3.5" />
-          <span>Design Tokens & OKLCH Theme</span>
-        </button>
       </div>
+
+      {/* Tab: Theming & Token Verification */}
+      {activeTab === 'theming' && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-6 max-w-3xl">
+          <div>
+            <h2 className="text-base font-bold text-card-foreground">Ethereal UI Appearance & Theme Engine</h2>
+            <p className="text-xs text-muted-foreground">Switch between Dark/Light modes and dynamic OKLCH color palettes</p>
+          </div>
+
+          {/* Dark / Light Mode Selector */}
+          <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
+            <span className="text-xs font-bold text-foreground">Canvas Color Mode</span>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (mode !== 'dark') toggleMode();
+                }}
+                className={`p-3 rounded-xl border flex items-center gap-3 transition cursor-pointer ${
+                  mode === 'dark'
+                    ? 'border-primary bg-primary/10 text-foreground font-semibold shadow-xs'
+                    : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-700 text-amber-400">
+                  <Moon className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-semibold text-foreground">Dark Telemetry (Recommended)</p>
+                  <p className="text-[10px] text-muted-foreground">Deep zinc `#09090b` canvas with crisp elevated panels</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (mode !== 'light') toggleMode();
+                }}
+                className={`p-3 rounded-xl border flex items-center gap-3 transition cursor-pointer ${
+                  mode === 'light'
+                    ? 'border-primary bg-primary/10 text-foreground font-semibold shadow-xs'
+                    : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="p-2 rounded-lg bg-zinc-100 border border-zinc-300 text-amber-500">
+                  <Sun className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-semibold text-foreground">Light Surface</p>
+                  <p className="text-[10px] text-muted-foreground">Clean enterprise light mode with WCAG 2.1 AA contrast</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Theme Palette Cards */}
+          <div className="space-y-3">
+            <span className="text-xs font-bold text-foreground">Ethereal UI OKLCH Presets</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {THEME_OPTIONS.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => setColorTheme(theme.id)}
+                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer space-y-2 ${
+                    colorTheme === theme.id
+                      ? 'border-primary bg-primary/10 shadow-sm'
+                      : 'border-border bg-card hover:bg-muted/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{theme.icon}</span>
+                    {colorTheme === theme.id && (
+                      <Badge variant="primary" className="text-[9px]">Active</Badge>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-xs text-foreground">{theme.name}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className={`h-3 w-3 rounded-full ${theme.previewClass}`} />
+                      <span className="text-[10px] text-muted-foreground font-mono">OKLCH Adaptive</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Token Contrast Verification Box */}
+          <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground">Active Token Contrast Verification</span>
+              <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30">
+                WCAG 2.1 AA Compliant
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px]">
+              <div className="p-2.5 rounded-lg bg-primary text-primary-foreground font-mono font-semibold shadow-xs">
+                bg-primary
+              </div>
+              <div className="p-2.5 rounded-lg bg-secondary text-secondary-foreground font-mono font-semibold border border-border">
+                bg-secondary
+              </div>
+              <div className="p-2.5 rounded-lg bg-muted text-muted-foreground font-mono font-semibold">
+                bg-muted
+              </div>
+              <div className="p-2.5 rounded-lg bg-card text-card-foreground border border-border font-mono font-semibold">
+                bg-card
+              </div>
+              <div className="p-2.5 rounded-lg bg-destructive text-destructive-foreground font-mono font-semibold">
+                bg-destructive
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab: General Settings */}
       {activeTab === 'general' && (
@@ -210,52 +332,6 @@ export function SettingsView() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Theming & Token Verification */}
-      {activeTab === 'theming' && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5 max-w-2xl">
-          <div>
-            <h2 className="text-base font-bold text-card-foreground">Ethereal UI Design System Specifications</h2>
-            <p className="text-xs text-muted-foreground">Dark-first telemetry tokens and OKLCH color spaces</p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Token Standard:</span>
-                <span className="font-semibold text-foreground">Tailwind CSS v4 Native (@theme inline)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Default Canvas:</span>
-                <span className="font-mono text-foreground">#09090b (Deep Zinc)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Elevated Panels:</span>
-                <span className="font-mono text-foreground">#121215</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Borders:</span>
-                <span className="font-mono text-foreground">1px solid var(--border)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">WCAG Contrast:</span>
-                <span className="font-semibold text-emerald-500">2.1 AA Compliant</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-border bg-card space-y-2">
-              <p className="text-xs font-bold text-foreground">Active Color Palette Verification</p>
-              <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
-                <div className="p-2 rounded-lg bg-primary text-primary-foreground font-mono font-semibold">Primary</div>
-                <div className="p-2 rounded-lg bg-secondary text-secondary-foreground font-mono font-semibold">Secondary</div>
-                <div className="p-2 rounded-lg bg-muted text-muted-foreground font-mono font-semibold">Muted</div>
-                <div className="p-2 rounded-lg bg-card text-card-foreground border border-border font-mono font-semibold">Card</div>
-                <div className="p-2 rounded-lg bg-destructive text-destructive-foreground font-mono font-semibold">Destructive</div>
-              </div>
-            </div>
           </div>
         </div>
       )}

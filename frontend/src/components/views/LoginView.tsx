@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowRight, Lock, Mail, CheckCircle2 } from 'lucide-react';
 import { Button, Input, Badge } from '@etherealui/react';
 import { AuthProvider, useAuth, DEMO_ACCOUNTS } from '../../lib/auth-context';
+import { ThemeProvider } from '../../lib/theme-context';
 
 export function LoginView() {
   const { login } = useAuth();
@@ -150,8 +151,10 @@ export function LoginView() {
 
 export function LoginPage() {
   return (
-    <AuthProvider>
-      <LoginView />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <LoginView />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

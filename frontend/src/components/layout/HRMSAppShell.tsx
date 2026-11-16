@@ -15,6 +15,10 @@ import {
   Building2,
   Menu,
   X,
+  Sun,
+  Moon,
+  Palette,
+  Sparkles,
 } from 'lucide-react';
 import {
   Avatar,
@@ -29,6 +33,7 @@ import {
 } from '@etherealui/react';
 import { useAuth, DEMO_ACCOUNTS } from '../../lib/auth-context';
 import { useNav, NavLink } from '../../lib/nav-context';
+import { useTheme, THEME_OPTIONS } from '../../lib/theme-context';
 
 interface HRMSAppShellProps {
   children: React.ReactNode;
@@ -51,6 +56,7 @@ const NAV_ITEMS = [
 export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   const { user, logout, switchRole } = useAuth();
   const { currentPath } = useNav();
+  const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const effectivePath = currentPath || activePath || '/';
@@ -82,7 +88,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row transition-colors duration-150">
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-sidebar/50 backdrop-blur-md sticky top-0 h-screen z-30">
         {/* Brand Header */}
@@ -189,15 +195,61 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full border border-border bg-muted/30 text-[11px] text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Go API: Online (v1.25)</span>
-            </div>
+            {/* Ethereal Theme Palette Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer text-foreground transition"
+                  title="Switch Ethereal OKLCH Theme"
+                >
+                  <Palette className="h-3.5 w-3.5 text-primary" />
+                  <span className="hidden sm:inline capitalize font-medium text-[11px]">
+                    {THEME_OPTIONS.find((t) => t.id === colorTheme)?.name || 'Theme'}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel>Ethereal OKLCH Themes</DropdownMenuLabel>
+                {THEME_OPTIONS.map((t) => (
+                  <DropdownMenuItem
+                    key={t.id}
+                    onClick={() => setColorTheme(t.id)}
+                    className="flex items-center justify-between text-xs cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${t.previewClass}`} />
+                      <span>{t.name}</span>
+                    </div>
+                    {colorTheme === t.id && (
+                      <Badge variant="primary" className="text-[9px]">Active</Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            <Badge variant={getRoleVariant(user?.role)} className="text-xs px-2.5 py-1">
+            {/* Dark / Light Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleMode}
+              title={mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="p-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer flex items-center justify-center"
+            >
+              {mode === 'dark' ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-primary" />
+              )}
+            </button>
+
+            {/* Role Badge */}
+            <Badge variant={getRoleVariant(user?.role)} className="text-xs px-2.5 py-1 hidden sm:inline-flex">
               {getRoleLabel(user?.role)}
             </Badge>
 
+            {/* Logout Button */}
             <Button
               size="sm"
               variant="outline"

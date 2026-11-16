@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeProvider } from '../../lib/theme-context';
 import { AuthProvider } from '../../lib/auth-context';
 import { NavProvider, useNav } from '../../lib/nav-context';
 import { HRMSAppShell } from './HRMSAppShell';
@@ -49,12 +50,14 @@ function DynamicView({ fallbackChildren }: { fallbackChildren?: React.ReactNode 
 
 export function AppContainer({ initialPath = '/', children }: AppContainerProps) {
   return (
-    <AuthProvider>
-      <NavProvider initialPath={initialPath}>
-        <HRMSAppShell activePath={initialPath}>
-          <DynamicView fallbackChildren={children} />
-        </HRMSAppShell>
-      </NavProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <NavProvider initialPath={initialPath}>
+          <HRMSAppShell activePath={initialPath}>
+            <DynamicView fallbackChildren={children} />
+          </HRMSAppShell>
+        </NavProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
