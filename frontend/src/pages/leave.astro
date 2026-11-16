@@ -1,0 +1,14 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { AuthProvider } from '../lib/auth-context';
+import { HRMSAppShell } from '../components/layout/HRMSAppShell';
+import { LeaveView } from '../components/views/LeaveView';
+---
+
+<RootLayout title="Leave & Absence Management — Ethereal HRMS">
+  <AuthProvider client:only="react">
+    <HRMSAppShell client:only="react" activePath="/leave">
+      <LeaveView client:only="react" />
+    </HRMSAppShell>
+  </AuthProvider>
+</RootLayout>
