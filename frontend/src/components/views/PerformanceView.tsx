@@ -11,13 +11,27 @@ import {
   X,
   Edit2,
 } from "lucide-react";
-import { Button, Badge, Input, Progress } from "@etherealui/react";
+import {
+  Button,
+  Badge,
+  Input,
+  Textarea,
+  Progress,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useNotification } from "../../lib/notification-context";
 import type { PerformanceCycle, PerformanceGoal } from "../../lib/types";
 
 export function PerformanceView() {
   const { user } = useAuth();
+  const { toast } = useNotification();
   const [cycles, setCycles] = useState<PerformanceCycle[]>([]);
   const [goals, setGoals] = useState<PerformanceGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,9 +87,16 @@ export function PerformanceView() {
         current_value: newVal,
         status: updatedStatus,
       });
+      toast.success(
+        "Progress OKR Disimpan",
+        `Pencapaian berhasil diperbarui ke ${newVal}% (${updatedStatus}).`,
+      );
       loadPerformanceData();
     } catch (err: any) {
-      alert(err.message || "Failed to update goal");
+      toast.error(
+        "Gagal Memperbarui Progress",
+        err.message || "Failed to update goal",
+      );
     }
   };
 
@@ -90,6 +111,10 @@ export function PerformanceView() {
         score: 4.0,
       });
       setIsModalOpen(false);
+      toast.success(
+        "Sasaran Kinerja Terdaftar",
+        `Goal "${newGoal.title}" telah ditambahkan ke siklus aktif.`,
+      );
       setNewGoal({
         title: "",
         description: "",
@@ -102,7 +127,10 @@ export function PerformanceView() {
       });
       loadPerformanceData();
     } catch (err: any) {
-      alert(err.message || "Failed to create goal");
+      toast.error(
+        "Gagal Mendaftarkan Goal",
+        err.message || "Failed to create goal",
+      );
     }
   };
 
@@ -291,103 +319,105 @@ export function PerformanceView() {
       </div>
 
       {/* New Goal Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-card-foreground">
-                Add New OKR / Goal
-              </h2>
-              <button onClick={() => setIsModalOpen(false)}>
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
+      <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <ModalContent className="max-w-md">
+          <ModalHeader>
+            <ModalTitle>Add New OKR / Goal</ModalTitle>
+            <ModalDescription>
+              Define measurable target metrics for the active performance cycle.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form onSubmit={handleCreateGoal} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Goal Title *
+              </label>
+              <Input
+                required
+                value={newGoal.title}
+                onChange={(e) =>
+                  setNewGoal({ ...newGoal, title: e.target.value })
+                }
+                placeholder="e.g. Reduce CI/CD deployment cycle to < 5 mins"
+                className="text-xs"
+              />
             </div>
 
-            <form onSubmit={handleCreateGoal} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-foreground">
-                  Goal Title *
+                  Category
+                </label>
+                <select
+                  value={newGoal.category}
+                  onChange={(e) =>
+                    setNewGoal({ ...newGoal, category: e.target.value })
+                  }
+                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="OKR">Strategic OKR</option>
+                  <option value="KPI">Operational KPI</option>
+                  <option value="Growth">Professional Growth</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Weight (%)
                 </label>
                 <Input
-                  required
-                  value={newGoal.title}
+                  type="number"
+                  min="10"
+                  max="100"
+                  value={newGoal.weight}
                   onChange={(e) =>
-                    setNewGoal({ ...newGoal, title: e.target.value })
+                    setNewGoal({
+                      ...newGoal,
+                      weight: parseInt(e.target.value) || 20,
+                    })
                   }
-                  placeholder="e.g. Reduce CI/CD deployment cycle to < 5 mins"
                   className="text-xs"
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Category
-                  </label>
-                  <select
-                    value={newGoal.category}
-                    onChange={(e) =>
-                      setNewGoal({ ...newGoal, category: e.target.value })
-                    }
-                    className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
-                  >
-                    <option value="OKR">Strategic OKR</option>
-                    <option value="KPI">Operational KPI</option>
-                    <option value="Growth">Professional Growth</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Weight (%)
-                  </label>
-                  <Input
-                    type="number"
-                    min="10"
-                    max="100"
-                    value={newGoal.weight}
-                    onChange={(e) =>
-                      setNewGoal({
-                        ...newGoal,
-                        weight: parseInt(e.target.value) || 20,
-                      })
-                    }
-                    className="text-xs"
-                  />
-                </div>
-              </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Description & Key Milestones
+              </label>
+              <Textarea
+                rows={3}
+                value={newGoal.description}
+                onChange={(e) =>
+                  setNewGoal({ ...newGoal, description: e.target.value })
+                }
+                placeholder="Concrete measurable deliverables..."
+                className="text-xs"
+              />
+            </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">
-                  Description & Key Milestones
-                </label>
-                <textarea
-                  rows={3}
-                  value={newGoal.description}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, description: e.target.value })
-                  }
-                  placeholder="Concrete measurable deliverables..."
-                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-border flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" size="sm">
-                  Save Goal
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <ModalFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="text-xs shadow-md shadow-primary/20"
+              >
+                Save Goal
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

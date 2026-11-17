@@ -10,16 +10,31 @@ import {
   DollarSign,
   Tag,
 } from "lucide-react";
-import { Button, Badge, Input } from "@etherealui/react";
+import {
+  Button,
+  Badge,
+  Input,
+  Textarea,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ConfirmationDialog,
+} from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useNotification } from "../../lib/notification-context";
 import type { Expense } from "../../lib/types";
 
 export function ExpensesView() {
   const { user } = useAuth();
+  const { toast } = useNotification();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rejectExpenseId, setRejectExpenseId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -59,6 +74,10 @@ export function ExpensesView() {
     try {
       await api.createExpense(newExpense);
       setIsModalOpen(false);
+      toast.success(
+        "Klaim Diajukan",
+        `Klaim sebesar ${formatIDR(newExpense.amount)} berhasil dikirim untuk approval.`,
+      );
       setNewExpense({
         title: "",
         category: "Travel",
@@ -68,7 +87,10 @@ export function ExpensesView() {
       });
       loadExpenses();
     } catch (err: any) {
-      alert(err.message || "Failed to submit expense claim");
+      toast.error(
+        "Gagal Mengajukan Klaim",
+        err.message || "Failed to submit expense claim",
+      );
     }
   };
 
@@ -85,9 +107,16 @@ export function ExpensesView() {
           ? "Approved for payroll reimbursement"
           : "Exceeds departmental budget quota",
       );
+      toast.success(
+        status === "approved" ? "Klaim Disetujui" : "Klaim Ditolak",
+        `Status reimbursement telah diperbarui.`,
+      );
       loadExpenses();
     } catch (err: any) {
-      alert(err.message || "Failed to update expense status");
+      toast.error(
+        "Gagal Memperbarui Status",
+        err.message || "Failed to update expense status",
+      );
     } finally {
       setActionLoading(null);
     }
@@ -275,9 +304,7 @@ export function ExpensesView() {
                             size="sm"
                             variant="outline"
                             disabled={actionLoading === exp.id}
-                            onClick={() =>
-                              handleUpdateStatus(exp.id, "rejected")
-                            }
+                            onClick={() => setRejectExpenseId(exp.id)}
                             className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 flex items-center gap-1"
                           >
                             <X className="h-3 w-3" />
@@ -310,128 +337,149 @@ export function ExpensesView() {
       </div>
 
       {/* Submit Claim Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-card-foreground">
-                Submit Reimbursement Claim
-              </h2>
-              <button onClick={() => setIsModalOpen(false)}>
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
+      <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <ModalContent className="max-w-md">
+          <ModalHeader>
+            <ModalTitle>Submit Reimbursement Claim</ModalTitle>
+            <ModalDescription>
+              Record corporate expense receipt for financial audit and payroll
+              reimbursement.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form onSubmit={handleCreateExpense} className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Expense Title *
+              </label>
+              <Input
+                required
+                value={newExpense.title}
+                onChange={(e) =>
+                  setNewExpense({ ...newExpense, title: e.target.value })
+                }
+                placeholder="e.g. AWS Cloud Certification Exam Voucher"
+                className="text-xs"
+              />
             </div>
 
-            <form onSubmit={handleCreateExpense} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-foreground">
-                  Expense Title *
+                  Category *
                 </label>
-                <Input
-                  required
-                  value={newExpense.title}
+                <select
+                  value={newExpense.category}
                   onChange={(e) =>
-                    setNewExpense({ ...newExpense, title: e.target.value })
+                    setNewExpense({ ...newExpense, category: e.target.value })
                   }
-                  placeholder="e.g. AWS Cloud Certification Exam Voucher"
-                  className="text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Category *
-                  </label>
-                  <select
-                    value={newExpense.category}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, category: e.target.value })
-                    }
-                    className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
-                  >
-                    <option value="Training">Training & Certs</option>
-                    <option value="Travel">Travel & Lodging</option>
-                    <option value="Hardware">Hardware & Equipment</option>
-                    <option value="Software">Software & SaaS</option>
-                    <option value="Meals">Client Entertainment</option>
-                    <option value="Medical">Medical / Wellness</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Amount (IDR) *
-                  </label>
-                  <Input
-                    type="number"
-                    min="10000"
-                    required
-                    value={newExpense.amount}
-                    onChange={(e) =>
-                      setNewExpense({
-                        ...newExpense,
-                        amount: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">
-                  Date Incurred *
-                </label>
-                <Input
-                  type="date"
-                  required
-                  value={newExpense.expense_date}
-                  onChange={(e) =>
-                    setNewExpense({
-                      ...newExpense,
-                      expense_date: e.target.value,
-                    })
-                  }
-                  className="text-xs"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">
-                  Business Justification
-                </label>
-                <textarea
-                  rows={2}
-                  value={newExpense.description}
-                  onChange={(e) =>
-                    setNewExpense({
-                      ...newExpense,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Explain the work relevance of this expenditure..."
-                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2 text-foreground"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-border flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsModalOpen(false)}
+                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" size="sm">
-                  Submit Claim
-                </Button>
+                  <option value="Training">Training & Certs</option>
+                  <option value="Travel">Travel & Lodging</option>
+                  <option value="Hardware">Hardware & Equipment</option>
+                  <option value="Software">Software & SaaS</option>
+                  <option value="Meals">Client Entertainment</option>
+                  <option value="Medical">Medical / Wellness</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Amount (IDR) *
+                </label>
+                <Input
+                  type="number"
+                  min="10000"
+                  required
+                  value={newExpense.amount}
+                  onChange={(e) =>
+                    setNewExpense({
+                      ...newExpense,
+                      amount: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Date Incurred *
+              </label>
+              <Input
+                type="date"
+                required
+                value={newExpense.expense_date}
+                onChange={(e) =>
+                  setNewExpense({
+                    ...newExpense,
+                    expense_date: e.target.value,
+                  })
+                }
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Business Justification
+              </label>
+              <Textarea
+                rows={2}
+                value={newExpense.description}
+                onChange={(e) =>
+                  setNewExpense({
+                    ...newExpense,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Explain the work relevance of this expenditure..."
+                className="text-xs"
+              />
+            </div>
+
+            <ModalFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="text-xs shadow-md shadow-primary/20"
+              >
+                Submit Claim
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+
+      {/* Rejection Confirmation Dialog */}
+      <ConfirmationDialog
+        open={!!rejectExpenseId}
+        onOpenChange={(open) => !open && setRejectExpenseId(null)}
+        title="Decline Reimbursement Claim"
+        description="Are you sure you want to reject this expense reimbursement? The employee will be notified with the decline record."
+        confirmText="Reject Claim"
+        cancelText="Cancel"
+        variant="destructive"
+        loading={actionLoading === rejectExpenseId}
+        onConfirm={async () => {
+          if (rejectExpenseId) {
+            await handleUpdateStatus(rejectExpenseId, "rejected");
+            setRejectExpenseId(null);
+          }
+        }}
+      />
     </div>
   );
 }
