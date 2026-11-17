@@ -110,7 +110,7 @@ To apply an Ethereal UI theme preset:
 
 ## 4. Component Catalog & Import Reference
 
-Import any of the 42 primitives, 6 charts, and 16 enterprise blocks directly from `@etherealui/react`:
+Import any of the 44 primitives, 6 charts, and 17 enterprise blocks directly from `@etherealui/react`:
 
 ```tsx
 import {
@@ -121,6 +121,9 @@ import {
   IconButton,
 
   // 2. Feedback, Indicators & Badges
+  Alert,
+  AlertTitle,
+  AlertDescription,
   Badge,
   Chip,
   Announcement,
@@ -156,7 +159,40 @@ import {
 
   // 5. Overlays & Dialogs (Radix UI)
   Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+  ConfirmationDialog,
   Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+  Sheet, // Interoperable alias for Drawer
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
   Popover,
   Tooltip,
   Dropdown,
@@ -179,6 +215,7 @@ import {
   HeatmapStatisticChart,
 
   // 8. Enterprise & Agentic Blocks
+  NotificationCenter,
   StatCardBlock,
   MultiMetricGrid,
   SystemHealthBlock,
@@ -389,6 +426,201 @@ export function CustomerManagementPage() {
           </div>
         )}
       </Drawer>
+    </div>
+  )
+}
+```
+
+---
+
+### Recipe 4: Overlays — Confirmation Dialogs (AlertDialog), Side Modals (Drawer/Sheet) & Dialogs
+Ethereal UI provides three distinct, accessible overlay primitives:
+- `AlertDialog`: Confirmation dialog that interrupts the user before destructive actions (requires explicit Cancel or Confirm).
+- `Drawer` (or `Sheet`): Edge-anchored side modal (`side="right" | "left" | "top" | "bottom"`) with standard widths (`sm`, `default`, `lg`, `xl`, `full`).
+- `Modal` / `Dialog`: Center-anchored or top-anchored dialog with configurable size (`sm`, `default`, `lg`, `xl`, `full`) and position (`center`, `top`).
+
+```tsx
+import React, { useState } from "react"
+import {
+  Button,
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  Input
+} from "@etherealui/react"
+
+export function OverlaysOverview() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* 1. Side Modal (Drawer / Sheet) */}
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerTrigger asChild>
+          <Button variant="outline">Open Side Drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent side="right" size="lg">
+          <DrawerHeader>
+            <DrawerTitle>Configure Agent Parameters</DrawerTitle>
+            <DrawerDescription>
+              Adjust hyper-parameters, context temperature, and execution limits.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-foreground">Temperature</label>
+              <Input type="number" defaultValue="0.7" className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-foreground">System Prompt</label>
+              <Input defaultValue="You are an expert autonomous coder." className="mt-1" />
+            </div>
+          </div>
+          <DrawerFooter>
+            <Button variant="outline" onClick={() => setDrawerOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={() => setDrawerOpen(false)}>Save Changes</Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* 2. Center/Top Modal with custom size */}
+      <Button variant="outline" onClick={() => setModalOpen(true)}>
+        Open Center Modal
+      </Button>
+
+      <Modal open={modalOpen} onOpenChange={setModalOpen}>
+        <ModalContent size="default" position="center">
+          <ModalHeader>
+            <ModalTitle>Edit Settings</ModalTitle>
+            <ModalDescription>
+              Update your workspace profile preferences.
+            </ModalDescription>
+          </ModalHeader>
+          <div className="py-2 text-xs text-muted-foreground">
+            Configure default notification feeds and dark-mode tokens.
+          </div>
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={() => setModalOpen(false)}>Save</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 3. Confirmation Dialog (AlertDialog) for critical/destructive actions */}
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive">Delete Deployment</Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently destroy worker cluster pod-09 and erase cached telemetry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => console.log("Deleted!")}>
+              Yes, Delete Deployment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+```
+
+---
+
+### Recipe 5: Inline Alerts & Dashboard Notification Center
+Use `Alert` for context-sensitive inline banner messages and `NotificationCenter` for the global dashboard notification popover.
+
+```tsx
+import React, { useState } from "react"
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  NotificationCenter,
+  type NotificationItem
+} from "@etherealui/react"
+import { AlertCircle, ShieldCheck } from "lucide-react"
+
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "1",
+    title: "Deployment Successful",
+    description: "Production build v0.0.8 passed health checks.",
+    timestamp: "2m ago",
+    read: false,
+    type: "success",
+  },
+  {
+    id: "2",
+    title: "Rate Limit Approaching",
+    description: "API consumer token usage reached 85% of tier quota.",
+    timestamp: "18m ago",
+    read: false,
+    type: "warning",
+  },
+]
+
+export function DashboardHeaderBar() {
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
+
+  return (
+    <div className="space-y-4">
+      {/* Inline Callout Alert */}
+      <Alert variant="warning" dismissible>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Scheduled Maintenance Window</AlertTitle>
+        <AlertDescription>
+          Database indexing will occur tonight at 02:00 UTC. Expect slight read latency.
+        </AlertDescription>
+      </Alert>
+
+      {/* Header bar with Notification Bell Popover */}
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <span className="text-sm font-bold text-foreground">Control Tower</span>
+        </div>
+
+        <NotificationCenter
+          notifications={notifications}
+          onMarkAsRead={(id) => {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+            )
+          }}
+          onMarkAllAsRead={() => {
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+          }}
+          onClearAll={() => setNotifications([])}
+        />
+      </div>
     </div>
   )
 }
