@@ -11,7 +11,19 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { Button, Badge, Input, Textarea } from "@etherealui/react";
+import {
+  Button,
+  Badge,
+  Input,
+  Textarea,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ConfirmationDialog,
+} from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
@@ -27,6 +39,7 @@ export function LeaveView() {
 
   // New Request Form Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [newRequest, setNewRequest] = useState({
     leave_type_id: "",
     start_date: "",
@@ -311,9 +324,7 @@ export function LeaveView() {
                             size="sm"
                             variant="outline"
                             disabled={actionLoading === req.id}
-                            onClick={() =>
-                              handleUpdateStatus(req.id, "rejected")
-                            }
+                            onClick={() => setRejectTargetId(req.id)}
                             className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 flex items-center gap-1"
                           >
                             <X className="h-3 w-3" />
@@ -346,139 +357,150 @@ export function LeaveView() {
       </div>
 
       {/* Request Leave Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-card-foreground">
-                Submit Leave Request
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
+      <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <ModalContent className="max-w-md">
+          <ModalHeader>
+            <ModalTitle>Submit Leave Request</ModalTitle>
+            <ModalDescription>
+              Submit quota deduction for manager approval and roster sync.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form onSubmit={handleCreateRequest} className="space-y-4 pt-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Leave Type *
+              </label>
+              <select
+                required
+                value={newRequest.leave_type_id}
+                onChange={(e) =>
+                  setNewRequest({
+                    ...newRequest,
+                    leave_type_id: e.target.value,
+                  })
+                }
+                className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <X className="h-4 w-4" />
-              </button>
+                {types.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} (Max {t.max_days_per_year}d/yr)
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <form onSubmit={handleCreateRequest} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-foreground">
-                  Leave Type *
-                </label>
-                <select
-                  required
-                  value={newRequest.leave_type_id}
-                  onChange={(e) =>
-                    setNewRequest({
-                      ...newRequest,
-                      leave_type_id: e.target.value,
-                    })
-                  }
-                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground"
-                >
-                  {types.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} (Max {t.max_days_per_year}d/yr)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Start Date *
-                  </label>
-                  <Input
-                    type="date"
-                    required
-                    value={newRequest.start_date}
-                    onChange={(e) =>
-                      setNewRequest({
-                        ...newRequest,
-                        start_date: e.target.value,
-                      })
-                    }
-                    className="text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    End Date *
-                  </label>
-                  <Input
-                    type="date"
-                    required
-                    value={newRequest.end_date}
-                    onChange={(e) =>
-                      setNewRequest({ ...newRequest, end_date: e.target.value })
-                    }
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">
-                  Total Working Days *
+                  Start Date *
                 </label>
                 <Input
-                  type="number"
-                  min="1"
-                  max="90"
+                  type="date"
                   required
-                  value={newRequest.total_days}
+                  value={newRequest.start_date}
                   onChange={(e) =>
                     setNewRequest({
                       ...newRequest,
-                      total_days: parseInt(e.target.value) || 1,
+                      start_date: e.target.value,
                     })
                   }
                   className="text-xs"
                 />
               </div>
-
               <div className="space-y-1">
                 <label className="text-xs font-medium text-foreground">
-                  Reason & Coverage Handover *
+                  End Date *
                 </label>
-                <textarea
+                <Input
+                  type="date"
                   required
-                  rows={3}
-                  value={newRequest.reason}
+                  value={newRequest.end_date}
                   onChange={(e) =>
-                    setNewRequest({ ...newRequest, reason: e.target.value })
+                    setNewRequest({ ...newRequest, end_date: e.target.value })
                   }
-                  placeholder="Provide context, emergency contact, or handover colleague..."
-                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="text-xs"
                 />
               </div>
+            </div>
 
-              <div className="pt-3 border-t border-border flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={submitting}
-                  className="text-xs shadow-md shadow-primary/20"
-                >
-                  {submitting ? "Submitting..." : "Send Request for Approval"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Total Working Days *
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="90"
+                required
+                value={newRequest.total_days}
+                onChange={(e) =>
+                  setNewRequest({
+                    ...newRequest,
+                    total_days: parseInt(e.target.value) || 1,
+                  })
+                }
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Reason & Coverage Handover *
+              </label>
+              <Textarea
+                required
+                rows={3}
+                value={newRequest.reason}
+                onChange={(e) =>
+                  setNewRequest({ ...newRequest, reason: e.target.value })
+                }
+                placeholder="Provide context, emergency contact, or handover colleague..."
+                className="text-xs"
+              />
+            </div>
+
+            <ModalFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={submitting}
+                className="text-xs shadow-md shadow-primary/20"
+              >
+                {submitting ? "Submitting..." : "Send Request for Approval"}
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+
+      {/* Rejection Confirmation Dialog */}
+      <ConfirmationDialog
+        open={!!rejectTargetId}
+        onOpenChange={(open) => !open && setRejectTargetId(null)}
+        title="Reject Leave Request"
+        description="Are you sure you want to decline this leave request? The employee's pending balance will be released and notified."
+        confirmText="Confirm Rejection"
+        cancelText="Cancel"
+        variant="destructive"
+        loading={actionLoading === rejectTargetId}
+        onConfirm={async () => {
+          if (rejectTargetId) {
+            await handleUpdateStatus(rejectTargetId, "rejected");
+            setRejectTargetId(null);
+          }
+        }}
+      />
     </div>
   );
 }
