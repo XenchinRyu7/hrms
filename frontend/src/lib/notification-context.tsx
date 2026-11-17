@@ -5,7 +5,11 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
-import { ToastCard, type ToastVariant } from "@etherealui/react";
+import {
+  ToastCard,
+  type ToastVariant,
+  type NotificationItem,
+} from "@etherealui/react";
 
 export interface ToastItem {
   id: string;
@@ -15,22 +19,16 @@ export interface ToastItem {
   timestamp: Date;
 }
 
-export interface EnterpriseNotification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  type: "leave" | "attendance" | "payroll" | "ats" | "system";
-  read: boolean;
-}
-
 interface NotificationContextType {
   toasts: ToastItem[];
-  notifications: EnterpriseNotification[];
+  notifications: NotificationItem[];
   unreadCount: number;
   addToast: (toast: Omit<ToastItem, "id" | "timestamp">) => void;
   removeToast: (id: string) => void;
+  markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  clearAll: () => void;
+  dismiss: (id: string) => void;
   toast: {
     success: (title: string, description?: string) => void;
     error: (title: string, description?: string) => void;
@@ -41,31 +39,41 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
 
-const INITIAL_NOTIFICATIONS: EnterpriseNotification[] = [
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "notif-1",
-    title: "Clock-In Recorded",
-    message:
-      "Your attendance for today was verified and synced to Supabase PostgreSQL.",
-    time: "10m ago",
-    type: "attendance",
+    title: "Clock-In Synchronized",
+    description:
+      "Your daily attendance was verified and synced to Supabase PostgreSQL.",
+    timestamp: "10m ago",
+    type: "success",
     read: false,
+    actor: {
+      name: "Postgres Sync",
+    },
   },
   {
     id: "notif-2",
     title: "Payroll Disbursement Ready",
-    message: "November 2026 payroll calculation has been reviewed by Finance.",
-    time: "1h ago",
-    type: "payroll",
+    description:
+      "November 2026 payroll calculation has been verified by Finance.",
+    timestamp: "1h ago",
+    type: "info",
     read: false,
+    actor: {
+      name: "Payroll Engine",
+    },
   },
   {
     id: "notif-3",
-    title: "New Applicant in Pipeline",
-    message: "Rian Pratama advanced to the Technical Interview stage.",
-    time: "3h ago",
-    type: "ats",
+    title: "New ATS Candidate",
+    description: "Rian Pratama advanced to the Technical Interview stage.",
+    timestamp: "3h ago",
+    type: "warning",
     read: true,
+    actor: {
+      name: "Talent Portal",
+    },
   },
 ];
 
@@ -75,7 +83,7 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [notifications, setNotifications] = useState<EnterpriseNotification[]>(
+  const [notifications, setNotifications] = useState<NotificationItem[]>(
     INITIAL_NOTIFICATIONS,
   );
 
@@ -108,8 +116,22 @@ export function NotificationProvider({
     [removeToast],
   );
 
+  const markAsRead = useCallback((id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+  }, []);
+
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
+  const dismiss = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -133,7 +155,10 @@ export function NotificationProvider({
         unreadCount,
         addToast,
         removeToast,
+        markAsRead,
         markAllAsRead,
+        clearAll,
+        dismiss,
         toast: toastHelpers,
       }}
     >

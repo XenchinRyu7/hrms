@@ -31,6 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  NotificationCenter,
 } from "@etherealui/react";
 import { useAuth, DEMO_ACCOUNTS } from "../../lib/auth-context";
 import { useNav, NavLink } from "../../lib/nav-context";
@@ -141,7 +142,8 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   const { user, logout, switchRole } = useAuth();
   const { currentPath, navigate } = useNav();
   const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
-  const { notifications, unreadCount, markAllAsRead } = useNotification();
+  const { notifications, markAsRead, markAllAsRead, clearAll, dismiss } =
+    useNotification();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const effectivePath = currentPath || activePath || "/";
@@ -337,73 +339,15 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Enterprise Notification Center Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="relative p-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer flex items-center justify-center"
-                  title="Notifications & Telemetry Alerts"
-                >
-                  <Bell className="h-4 w-4 text-muted-foreground" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center animate-pulse">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-80 p-0 overflow-hidden"
-              >
-                <div className="p-3 border-b border-border flex items-center justify-between bg-card">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-xs text-foreground">
-                      Notifications
-                    </span>
-                    {unreadCount > 0 && (
-                      <Badge
-                        variant="primary"
-                        className="text-[10px] px-1.5 py-0.2"
-                      >
-                        {unreadCount} new
-                      </Badge>
-                    )}
-                  </div>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-[10px] text-primary hover:underline cursor-pointer font-medium"
-                    >
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-72 overflow-y-auto divide-y divide-border/60">
-                  {notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`p-3 text-xs transition hover:bg-muted/50 flex flex-col gap-1 ${
-                        !n.read ? "bg-primary/5" : ""
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-foreground">
-                          {n.title}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {n.time}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        {n.message}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Official Ethereal UI Notification Center */}
+            <NotificationCenter
+              notifications={notifications}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onClearAll={clearAll}
+              onDismiss={dismiss}
+              align="end"
+            />
 
             {/* Ethereal Theme Palette Selector */}
             <DropdownMenu>
