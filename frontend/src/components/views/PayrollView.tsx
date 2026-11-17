@@ -13,20 +13,33 @@ import {
   CreditCard,
   X,
 } from "lucide-react";
-import { Button, Badge, Input } from "@etherealui/react";
+import {
+  Button,
+  Badge,
+  Input,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ConfirmationDialog,
+} from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useNotification } from "../../lib/notification-context";
 import type { PayrollPeriod, Payslip } from "../../lib/types";
 
 export function PayrollView() {
   const { user } = useAuth();
+  const { toast } = useNotification();
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
   const [payslips, setPayslips] = useState<Payslip[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [isConfirmRunOpen, setIsConfirmRunOpen] = useState(false);
 
   const isAdminOrHR = user?.role === "admin" || user?.role === "hr_manager";
 
@@ -58,15 +71,19 @@ export function PayrollView() {
   const handleGeneratePayroll = async () => {
     if (!selectedPeriod) return;
     setProcessing(true);
-    setFeedback(null);
     try {
       await api.generatePayslips(selectedPeriod);
-      setFeedback(
-        "Payroll calculation executed! All employee payslips generated.",
+      toast.success(
+        "Kalkulasi Payroll Selesai",
+        "Semua slip gaji karyawan untuk periode ini telah digenerate.",
       );
       loadPayrollData();
+      setIsConfirmRunOpen(false);
     } catch (err: any) {
-      setFeedback(err.message || "Payroll generation failed");
+      toast.error(
+        "Gagal Menghitung Payroll",
+        err.message || "Payroll generation failed",
+      );
     } finally {
       setProcessing(false);
     }
@@ -107,7 +124,7 @@ export function PayrollView() {
           <Button
             variant="primary"
             size="sm"
-            onClick={handleGeneratePayroll}
+            onClick={() => setIsConfirmRunOpen(true)}
             disabled={processing}
             className="text-xs flex items-center gap-1.5 self-start sm:self-auto shadow-md shadow-primary/20"
           >
@@ -120,18 +137,6 @@ export function PayrollView() {
           </Button>
         )}
       </div>
-
-      {feedback && (
-        <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 text-foreground text-xs flex items-center justify-between">
-          <span>{feedback}</span>
-          <button
-            onClick={() => setFeedback(null)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* Cycle Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -292,170 +297,188 @@ export function PayrollView() {
       </div>
 
       {/* Official Payslip Statement Modal */}
-      {selectedPayslip && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-border">
+      <Modal
+        open={!!selectedPayslip}
+        onOpenChange={(open) => !open && setSelectedPayslip(null)}
+      >
+        <ModalContent className="max-w-xl">
+          <ModalHeader className="pb-3 border-b border-border">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
                   🌌
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-foreground">
-                    Ethereal Global Corp
-                  </h2>
-                  <p className="text-[11px] text-muted-foreground font-mono">
+                  <ModalTitle>Ethereal Global Corp</ModalTitle>
+                  <ModalDescription className="text-[11px] font-mono">
                     Confidential Salary Statement
+                  </ModalDescription>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.print()}
+                className="h-8 text-xs mr-6"
+              >
+                <Printer className="h-3 w-3 mr-1" />
+                <span>Print</span>
+              </Button>
+            </div>
+          </ModalHeader>
+
+          {selectedPayslip && (
+            <div className="space-y-4 pt-2">
+              {/* Recipient Details */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-border bg-muted/20 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-mono text-muted-foreground">
+                    Employee
+                  </span>
+                  <p className="font-bold text-foreground mt-0.5">
+                    {selectedPayslip.employee_name}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {selectedPayslip.employee_code} &bull;{" "}
+                    {selectedPayslip.department_name}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-mono text-muted-foreground">
+                    Period & Date
+                  </span>
+                  <p className="font-bold text-foreground mt-0.5">
+                    {selectedPayslip.period_name}
+                  </p>
+                  <p className="text-[11px] text-emerald-500 font-semibold">
+                    Payment Status: Disbursed
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.print()}
-                  className="h-8 text-xs"
-                >
-                  <Printer className="h-3 w-3 mr-1" />
-                  <span>Print</span>
-                </Button>
-                <button
-                  onClick={() => setSelectedPayslip(null)}
-                  className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+              {/* Breakdown Columns */}
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                {/* Earnings */}
+                <div className="space-y-2 p-3.5 rounded-xl border border-border bg-card">
+                  <p className="font-bold text-foreground pb-2 border-b border-border flex items-center justify-between">
+                    <span>Earnings</span>
+                    <span className="text-emerald-500">Gross</span>
+                  </p>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">Basic Salary</span>
+                    <span className="font-mono text-foreground">
+                      {formatIDR(selectedPayslip.basic_salary)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      Housing Allowance
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 2.000.000
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      Transport Allowance
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 1.500.000
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      Meal Allowance
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 1.200.000
+                    </span>
+                  </div>
+                  <div className="pt-2 border-t border-border flex justify-between font-semibold">
+                    <span>Total Allowances</span>
+                    <span className="font-mono text-emerald-500">
+                      +{formatIDR(selectedPayslip.total_allowances)}
+                    </span>
+                  </div>
+                </div>
 
-            {/* Recipient Details */}
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-border bg-muted/20 text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-mono text-muted-foreground">
-                  Employee
-                </span>
-                <p className="font-bold text-foreground mt-0.5">
-                  {selectedPayslip.employee_name}
-                </p>
-                <p className="text-[11px] text-muted-foreground font-mono">
-                  {selectedPayslip.employee_code} &bull;{" "}
-                  {selectedPayslip.department_name}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-mono text-muted-foreground">
-                  Period & Date
-                </span>
-                <p className="font-bold text-foreground mt-0.5">
-                  {selectedPayslip.period_name}
-                </p>
-                <p className="text-[11px] text-emerald-500 font-semibold">
-                  Payment Status: Disbursed
-                </p>
-              </div>
-            </div>
-
-            {/* Breakdown Columns */}
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              {/* Earnings */}
-              <div className="space-y-2 p-3.5 rounded-xl border border-border bg-card">
-                <p className="font-bold text-foreground pb-2 border-b border-border flex items-center justify-between">
-                  <span>Earnings</span>
-                  <span className="text-emerald-500">Gross</span>
-                </p>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">Basic Salary</span>
-                  <span className="font-mono text-foreground">
-                    {formatIDR(selectedPayslip.basic_salary)}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">
-                    Housing Allowance
-                  </span>
-                  <span className="font-mono text-foreground">
-                    Rp 2.000.000
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">
-                    Transport Allowance
-                  </span>
-                  <span className="font-mono text-foreground">
-                    Rp 1.500.000
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">Meal Allowance</span>
-                  <span className="font-mono text-foreground">
-                    Rp 1.200.000
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-border flex justify-between font-semibold">
-                  <span>Total Allowances</span>
-                  <span className="font-mono text-emerald-500">
-                    +{formatIDR(selectedPayslip.total_allowances)}
-                  </span>
+                {/* Deductions */}
+                <div className="space-y-2 p-3.5 rounded-xl border border-border bg-card">
+                  <p className="font-bold text-foreground pb-2 border-b border-border flex items-center justify-between">
+                    <span>Deductions</span>
+                    <span className="text-destructive">Statutory</span>
+                  </p>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      Income Tax (PPh 21)
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 900.000
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      BPJS Ketenagakerjaan
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 420.000
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground">
+                      BPJS Kesehatan
+                    </span>
+                    <span className="font-mono text-foreground">
+                      Rp 300.000
+                    </span>
+                  </div>
+                  <div className="pt-6 border-t border-border flex justify-between font-semibold">
+                    <span>Total Deductions</span>
+                    <span className="font-mono text-destructive">
+                      -{formatIDR(selectedPayslip.total_deductions)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Deductions */}
-              <div className="space-y-2 p-3.5 rounded-xl border border-border bg-card">
-                <p className="font-bold text-foreground pb-2 border-b border-border flex items-center justify-between">
-                  <span>Deductions</span>
-                  <span className="text-destructive">Statutory</span>
-                </p>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">
-                    Income Tax (PPh 21)
-                  </span>
-                  <span className="font-mono text-foreground">Rp 900.000</span>
+              {/* Net Pay Callout */}
+              <div className="p-4 rounded-xl border border-primary/30 bg-primary/10 flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase font-mono font-semibold text-primary">
+                    Net Take-Home Pay
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Credited to BCA &bull;&bull;&bull;&bull; 8820
+                  </p>
                 </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">
-                    BPJS Ketenagakerjaan
-                  </span>
-                  <span className="font-mono text-foreground">Rp 420.000</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">BPJS Kesehatan</span>
-                  <span className="font-mono text-foreground">Rp 300.000</span>
-                </div>
-                <div className="pt-6 border-t border-border flex justify-between font-semibold">
-                  <span>Total Deductions</span>
-                  <span className="font-mono text-destructive">
-                    -{formatIDR(selectedPayslip.total_deductions)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Net Pay Callout */}
-            <div className="p-4 rounded-xl border border-primary/30 bg-primary/10 flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase font-mono font-semibold text-primary">
-                  Net Take-Home Pay
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Credited to BCA &bull;&bull;&bull;&bull; 8820
+                <p className="text-2xl font-bold font-mono text-primary">
+                  {formatIDR(selectedPayslip.net_salary)}
                 </p>
               </div>
-              <p className="text-2xl font-bold font-mono text-primary">
-                {formatIDR(selectedPayslip.net_salary)}
-              </p>
-            </div>
 
-            <div className="text-center pt-2">
-              <p className="text-[10px] text-muted-foreground">
-                This is a computer-generated document authenticated by Ethereal
-                HRMS cryptographic signature.
-              </p>
+              <div className="text-center pt-2">
+                <p className="text-[10px] text-muted-foreground">
+                  This is a computer-generated document authenticated by
+                  Ethereal HRMS cryptographic signature.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Execute Payroll Confirmation Dialog */}
+      <ConfirmationDialog
+        open={isConfirmRunOpen}
+        onOpenChange={setIsConfirmRunOpen}
+        title="Execute Payroll Disbursement"
+        description="Are you sure you want to run salary calculations for this cycle? All tax and deduction adjustments will be computed and finalized in the database."
+        confirmText="Execute Calculation"
+        cancelText="Cancel"
+        variant="primary"
+        loading={processing}
+        onConfirm={handleGeneratePayroll}
+      />
     </div>
   );
 }
