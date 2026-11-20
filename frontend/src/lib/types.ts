@@ -2,8 +2,9 @@ export interface User {
   id: string;
   employee_code: string;
   email: string;
+  password?: string;
   full_name: string;
-  role: 'admin' | 'hr_manager' | 'manager' | 'employee';
+  role: "admin" | "hr_manager" | "manager" | "employee";
   department_id?: string;
   department_name?: string;
   job_title_id?: string;
@@ -13,7 +14,7 @@ export interface User {
   phone: string;
   address: string;
   hire_date: string;
-  status: 'active' | 'probation' | 'on_leave' | 'terminated';
+  status: "active" | "probation" | "on_leave" | "terminated";
   avatar_url: string;
   created_at: string;
 }
@@ -45,8 +46,8 @@ export interface Attendance {
   clock_in?: string;
   clock_out?: string;
   total_hours: number;
-  status: 'on_time' | 'late' | 'early_leave' | 'absent';
-  work_location: 'office' | 'remote' | 'field';
+  status: "on_time" | "late" | "early_leave" | "absent";
+  work_location: "office" | "remote" | "field";
   ip_address?: string;
   notes?: string;
 }
@@ -83,7 +84,7 @@ export interface LeaveRequest {
   end_date: string;
   total_days: number;
   reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  status: "pending" | "approved" | "rejected" | "cancelled";
   approver_id?: string;
   approver_name?: string;
   approved_at?: string;
@@ -97,7 +98,7 @@ export interface PayrollPeriod {
   start_date: string;
   end_date: string;
   pay_date: string;
-  status: 'draft' | 'processing' | 'approved' | 'paid';
+  status: "draft" | "processing" | "approved" | "paid";
   total_disbursement: number;
   processed_by?: string;
   processed_at?: string;
@@ -120,7 +121,7 @@ export interface Payslip {
     allowances?: Record<string, number>;
     deductions?: Record<string, number>;
   };
-  status: 'draft' | 'issued' | 'paid';
+  status: "draft" | "issued" | "paid";
   paid_at?: string;
   created_at: string;
 }
@@ -136,7 +137,7 @@ export interface JobPosting {
   salary_range: string;
   description: string;
   requirements: string;
-  status: 'draft' | 'published' | 'closed';
+  status: "draft" | "published" | "closed";
   applicant_count: number;
   created_at: string;
 }
@@ -148,7 +149,7 @@ export interface Applicant {
   full_name: string;
   email: string;
   phone: string;
-  stage: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+  stage: "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
   rating: number;
   notes: string;
   created_at: string;
@@ -176,7 +177,7 @@ export interface PerformanceGoal {
   target_value: number;
   current_value: number;
   weight: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'behind';
+  status: "not_started" | "in_progress" | "completed" | "behind";
   manager_feedback?: string;
   score: number;
 }
@@ -191,7 +192,7 @@ export interface Expense {
   expense_date: string;
   description: string;
   receipt_url?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'reimbursed';
+  status: "pending" | "approved" | "rejected" | "reimbursed";
   approver_id?: string;
   approver_name?: string;
   approved_at?: string;
@@ -221,7 +222,12 @@ export interface DashboardTelemetry {
   attendance_rate: number;
   turnover_rate: number;
   department_stats: { department: string; count: number; percentage: number }[];
-  attendance_trend: { label: string; present: number; late: number; absent: number }[];
+  attendance_trend: {
+    label: string;
+    present: number;
+    late: number;
+    absent: number;
+  }[];
   payroll_trend: { month: string; disbursement: number }[];
   recent_audit_logs: AuditLog[];
 }

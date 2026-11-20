@@ -50,6 +50,8 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 		{
 			// Auth Profile
 			protected.GET("/auth/me", authH.Me)
+			protected.PUT("/auth/profile", authH.UpdateProfile)
+			protected.PUT("/auth/password", authH.ChangePassword)
 
 			// Executive Telemetry & Dashboard
 			protected.GET("/dashboard/telemetry", dashH.GetTelemetry)

@@ -1,0 +1,8 @@
+---
+import RootLayout from '../layouts/RootLayout.astro';
+import { ProfilePage } from '../components/pages/Pages';
+---
+
+<RootLayout title="My Profile & Security — EHMRS">
+  <ProfilePage client:only="react" />
+</RootLayout>

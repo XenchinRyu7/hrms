@@ -29,9 +29,20 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token    string    `json:"token"`
-	User     *Employee `json:"user"`
+	Token     string    `json:"token"`
+	User      *Employee `json:"user"`
 	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password" binding:"required,min=6"`
+}
+
+type UpdateProfileRequest struct {
+	Phone     string `json:"phone"`
+	Address   string `json:"address"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 type Department struct {
@@ -60,6 +71,7 @@ type Employee struct {
 	ID               string                 `json:"id"`
 	EmployeeCode     string                 `json:"employee_code"`
 	Email            string                 `json:"email"`
+	Password         string                 `json:"password,omitempty"`
 	PasswordHash     string                 `json:"-"`
 	FullName         string                 `json:"full_name"`
 	Role             string                 `json:"role"`
@@ -87,7 +99,7 @@ type Attendance struct {
 	ClockIn      *time.Time `json:"clock_in,omitempty"`
 	ClockOut     *time.Time `json:"clock_out,omitempty"`
 	TotalHours   float64    `json:"total_hours"`
-	Status       string     `json:"status"` // on_time, late, early_leave, absent
+	Status       string     `json:"status"`        // on_time, late, early_leave, absent
 	WorkLocation string     `json:"work_location"` // office, remote, field
 	IPAddress    string     `json:"ip_address,omitempty"`
 	Notes        string     `json:"notes,omitempty"`
@@ -181,22 +193,22 @@ type PayrollPeriod struct {
 }
 
 type Payslip struct {
-	ID               string                 `json:"id"`
-	PeriodID         string                 `json:"period_id"`
-	PeriodName       string                 `json:"period_name,omitempty"`
-	EmployeeID       string                 `json:"employee_id"`
-	EmployeeCode     string                 `json:"employee_code,omitempty"`
-	EmployeeName     string                 `json:"employee_name,omitempty"`
-	DepartmentName   string                 `json:"department_name,omitempty"`
-	JobTitle         string                 `json:"job_title,omitempty"`
-	BasicSalary      float64                `json:"basic_salary"`
-	TotalAllowances  float64                `json:"total_allowances"`
-	TotalDeductions  float64                `json:"total_deductions"`
-	NetSalary        float64                `json:"net_salary"`
-	Breakdown        map[string]interface{} `json:"breakdown"`
-	Status           string                 `json:"status"` // draft, issued, paid
-	PaidAt           *time.Time             `json:"paid_at,omitempty"`
-	CreatedAt        time.Time              `json:"created_at"`
+	ID              string                 `json:"id"`
+	PeriodID        string                 `json:"period_id"`
+	PeriodName      string                 `json:"period_name,omitempty"`
+	EmployeeID      string                 `json:"employee_id"`
+	EmployeeCode    string                 `json:"employee_code,omitempty"`
+	EmployeeName    string                 `json:"employee_name,omitempty"`
+	DepartmentName  string                 `json:"department_name,omitempty"`
+	JobTitle        string                 `json:"job_title,omitempty"`
+	BasicSalary     float64                `json:"basic_salary"`
+	TotalAllowances float64                `json:"total_allowances"`
+	TotalDeductions float64                `json:"total_deductions"`
+	NetSalary       float64                `json:"net_salary"`
+	Breakdown       map[string]interface{} `json:"breakdown"`
+	Status          string                 `json:"status"` // draft, issued, paid
+	PaidAt          *time.Time             `json:"paid_at,omitempty"`
+	CreatedAt       time.Time              `json:"created_at"`
 }
 
 type JobPosting struct {
@@ -291,34 +303,34 @@ type AuditLog struct {
 }
 
 type DashboardTelemetry struct {
-	TotalEmployees    int                      `json:"total_employees"`
-	ActiveToday       int                      `json:"active_today"`
-	OnLeaveToday      int                      `json:"on_leave_today"`
-	OpenJobs          int                      `json:"open_jobs"`
-	MonthlyPayroll    float64                  `json:"monthly_payroll"`
-	PendingApprovals  int                      `json:"pending_approvals"`
-	AttendanceRate    float64                  `json:"attendance_rate"`
-	TurnoverRate      float64                  `json:"turnover_rate"`
-	DepartmentStats   []DepartmentHeadcount    `json:"department_stats"`
-	AttendanceTrend   []DailyAttendanceStat    `json:"attendance_trend"`
-	PayrollTrend      []MonthlyPayrollStat     `json:"payroll_trend"`
-	RecentAuditLogs   []AuditLog               `json:"recent_audit_logs"`
+	TotalEmployees   int                   `json:"total_employees"`
+	ActiveToday      int                   `json:"active_today"`
+	OnLeaveToday     int                   `json:"on_leave_today"`
+	OpenJobs         int                   `json:"open_jobs"`
+	MonthlyPayroll   float64               `json:"monthly_payroll"`
+	PendingApprovals int                   `json:"pending_approvals"`
+	AttendanceRate   float64               `json:"attendance_rate"`
+	TurnoverRate     float64               `json:"turnover_rate"`
+	DepartmentStats  []DepartmentHeadcount `json:"department_stats"`
+	AttendanceTrend  []DailyAttendanceStat `json:"attendance_trend"`
+	PayrollTrend     []MonthlyPayrollStat  `json:"payroll_trend"`
+	RecentAuditLogs  []AuditLog            `json:"recent_audit_logs"`
 }
 
 type DepartmentHeadcount struct {
-	Department string `json:"department"`
-	Count      int    `json:"count"`
+	Department string  `json:"department"`
+	Count      int     `json:"count"`
 	Percentage float64 `json:"percentage"`
 }
 
 type DailyAttendanceStat struct {
-	Label     string `json:"label"`
-	Present   int    `json:"present"`
-	Late      int    `json:"late"`
-	Absent    int    `json:"absent"`
+	Label   string `json:"label"`
+	Present int    `json:"present"`
+	Late    int    `json:"late"`
+	Absent  int    `json:"absent"`
 }
 
 type MonthlyPayrollStat struct {
-	Month       string  `json:"month"`
+	Month        string  `json:"month"`
 	Disbursement float64 `json:"disbursement"`
 }

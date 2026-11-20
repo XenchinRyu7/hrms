@@ -65,6 +65,7 @@ export function EmployeesView() {
   const [newEmp, setNewEmp] = useState({
     full_name: "",
     email: "",
+    password: "",
     role: "employee" as const,
     department_id: "",
     job_title_id: "",
@@ -126,6 +127,7 @@ export function EmployeesView() {
       setNewEmp({
         full_name: "",
         email: "",
+        password: "",
         role: "employee",
         department_id: "",
         job_title_id: "",
@@ -716,18 +718,36 @@ export function EmployeesView() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
-                Phone Number
-              </label>
-              <Input
-                value={newEmp.phone}
-                onChange={(e) =>
-                  setNewEmp({ ...newEmp, phone: e.target.value })
-                }
-                placeholder="+62 811-..."
-                className="text-xs"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Phone Number
+                </label>
+                <Input
+                  value={newEmp.phone}
+                  onChange={(e) =>
+                    setNewEmp({ ...newEmp, phone: e.target.value })
+                  }
+                  placeholder="+62 811-..."
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Password Akun *
+                </label>
+                <Input
+                  type="password"
+                  required
+                  value={newEmp.password}
+                  onChange={(e) =>
+                    setNewEmp({ ...newEmp, password: e.target.value })
+                  }
+                  placeholder="Minimal 6 karakter"
+                  className="text-xs"
+                />
+              </div>
             </div>
 
             <ModalFooter className="p-0 pt-3 border-t border-border flex justify-end gap-2">

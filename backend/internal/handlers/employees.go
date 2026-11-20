@@ -48,10 +48,18 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 		return
 	}
 
-	// Default password if not provided
-	defaultPass := "password123"
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(defaultPass), bcrypt.DefaultCost)
+	// Use provided password or fallback to default
+	passToHash := emp.Password
+	if passToHash == "" {
+		passToHash = "password123"
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(passToHash), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
 	emp.PasswordHash = string(hashed)
+	emp.Password = "" // clear plain password before storing and returning
 
 	if err := h.store.CreateEmployee(&emp); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -82,6 +90,16 @@ func (h *EmployeeHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 	emp.ID = id
+
+	if emp.Password != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(emp.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+			return
+		}
+		emp.PasswordHash = string(hashed)
+		emp.Password = ""
+	}
 
 	if err := h.store.UpdateEmployee(&emp); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

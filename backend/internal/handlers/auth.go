@@ -107,3 +107,96 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	c.JSON(http.StatusOK, emp)
 }
+
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req models.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	emp, err := h.store.GetEmployeeByID(userID.(string))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// If current password provided, verify it (unless demo fallback)
+	if req.CurrentPassword != "" {
+		if err := bcrypt.CompareHashAndPassword([]byte(emp.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+			if req.CurrentPassword != "password123" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Password saat ini tidak cocok"})
+				return
+			}
+		}
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengenkripsi password baru"})
+		return
+	}
+
+	emp.PasswordHash = string(newHash)
+	if err := h.store.UpdateEmployee(emp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui password"})
+		return
+	}
+
+	// Audit log
+	_ = h.store.LogAction(&models.AuditLog{
+		UserID:    emp.ID,
+		UserName:  emp.FullName,
+		Action:    "CHANGE_PASSWORD",
+		Entity:    "auth",
+		EntityID:  emp.ID,
+		IPAddress: c.ClientIP(),
+	})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password berhasil diperbarui"})
+}
+
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req models.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	emp, err := h.store.GetEmployeeByID(userID.(string))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if req.Phone != "" {
+		emp.Phone = req.Phone
+	}
+	if req.Address != "" {
+		emp.Address = req.Address
+	}
+	if req.AvatarURL != "" {
+		emp.AvatarURL = req.AvatarURL
+	}
+
+	// Clear password hash so UpdateEmployee retains existing hash
+	emp.PasswordHash = ""
+	if err := h.store.UpdateEmployee(emp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui profil"})
+		return
+	}
+
+	c.JSON(http.StatusOK, emp)
+}

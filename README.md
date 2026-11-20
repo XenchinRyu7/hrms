@@ -1,4 +1,4 @@
-# 🌌 Ethereal HRMS — Full-Stack Enterprise People & Talent Operating System
+# Ethereal HRMS — Full-Stack Enterprise People & Talent Operating System
 
 [![Ethereal UI](https://img.shields.io/badge/UI_Engine-Ethereal_UI_v0.0.7-blue?style=flat-square)](https://ethereal-ui.saefulrohman.dev)
 [![Go Version](https://img.shields.io/badge/Backend-Go_1.25-00ADD8?style=flat-square&logo=go)](https://go.dev)

@@ -52,13 +52,17 @@ export function PayrollView() {
           employee_id: !isAdminOrHR ? user?.id : undefined,
         }),
       ]);
-      setPeriods(perList);
-      setPayslips(slipList);
-      if (perList.length > 0 && !selectedPeriod) {
-        setSelectedPeriod(perList[0].id);
+      const validPeriods = perList || [];
+      const validSlips = slipList || [];
+      setPeriods(validPeriods);
+      setPayslips(validSlips);
+      if (validPeriods.length > 0 && !selectedPeriod) {
+        setSelectedPeriod(validPeriods[0].id);
       }
     } catch (err) {
       console.error("Failed to load payroll:", err);
+      setPeriods([]);
+      setPayslips([]);
     } finally {
       setLoading(false);
     }
@@ -228,8 +232,8 @@ export function PayrollView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {payslips.length > 0 ? (
-                payslips.map((slip) => (
+              {(payslips || []).length > 0 ? (
+                (payslips || []).map((slip) => (
                   <tr key={slip.id} className="hover:bg-muted/30 transition">
                     <td className="py-3 px-4">
                       <p className="font-semibold text-foreground">
@@ -305,8 +309,8 @@ export function PayrollView() {
           <ModalHeader className="pb-3 border-b border-border">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                  🌌
+                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
+                  EH
                 </div>
                 <div>
                   <ModalTitle>Ethereal Global Corp</ModalTitle>

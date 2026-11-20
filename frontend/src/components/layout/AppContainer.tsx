@@ -14,6 +14,7 @@ import { PerformanceView } from "../views/PerformanceView";
 import { ExpensesView } from "../views/ExpensesView";
 import { AuditView } from "../views/AuditView";
 import { SettingsView } from "../views/SettingsView";
+import { ProfileView } from "../views/ProfileView";
 
 interface AppContainerProps {
   initialPath?: string;
@@ -48,6 +49,8 @@ function DynamicView({
       return <AuditView />;
     case "/settings":
       return <SettingsView />;
+    case "/profile":
+      return <ProfileView />;
     default:
       return fallbackChildren ? <>{fallbackChildren}</> : <DashboardView />;
   }

@@ -23,6 +23,9 @@ func (h *PayrollHandler) ListPeriods(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if periods == nil {
+		periods = []models.PayrollPeriod{}
+	}
 	c.JSON(http.StatusOK, periods)
 }
 
@@ -56,6 +59,9 @@ func (h *PayrollHandler) ListPayslips(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if slips == nil {
+		slips = []models.Payslip{}
 	}
 	c.JSON(http.StatusOK, slips)
 }

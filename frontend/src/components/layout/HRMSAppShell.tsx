@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   Clock,
-  CalendarOff,
   Wallet,
   Briefcase,
   Target,
@@ -15,11 +14,12 @@ import {
   Building2,
   Menu,
   X,
-  Sun,
-  Moon,
   Palette,
   ShieldAlert,
-  Bell,
+  User,
+  KeyRound,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   Avatar,
@@ -33,7 +33,7 @@ import {
   DropdownMenuLabel,
   NotificationCenter,
 } from "@etherealui/react";
-import { useAuth, DEMO_ACCOUNTS } from "../../lib/auth-context";
+import { useAuth } from "../../lib/auth-context";
 import { useNav, NavLink } from "../../lib/nav-context";
 import { useTheme, THEME_OPTIONS } from "../../lib/theme-context";
 import { useNotification } from "../../lib/notification-context";
@@ -80,12 +80,6 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Attendance & Clock",
         href: "/attendance",
         icon: Clock,
-        roles: ["admin", "hr_manager", "manager", "employee"],
-      },
-      {
-        label: "Leave & Time-Off",
-        href: "/leave",
-        icon: CalendarOff,
         roles: ["admin", "hr_manager", "manager", "employee"],
       },
     ],
@@ -139,7 +133,7 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout } = useAuth();
   const { currentPath, navigate } = useNav();
   const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
   const { notifications, markAsRead, markAllAsRead, clearAll, dismiss } =
@@ -192,20 +186,17 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-sidebar/50 backdrop-blur-md sticky top-0 h-screen z-30">
         {/* Brand Header */}
-        <div className="p-5 border-b border-border flex items-center justify-between">
+        <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md shadow-primary/25">
-              🌌
+            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm tracking-wider shadow-sm">
+              EH
             </div>
             <div>
-              <div className="font-bold tracking-tight text-sm flex items-center gap-1.5">
-                <span>Ethereal HRMS</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  v2.0
-                </span>
+              <div className="font-bold tracking-tight text-sm text-foreground">
+                EHMRS
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Enterprise People Ops
+                HR Management System
               </p>
             </div>
           </div>
@@ -268,35 +259,31 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuLabel>
-                Quick Switch Role (Enterprise Demo)
-              </DropdownMenuLabel>
-              {DEMO_ACCOUNTS.map((acc) => (
-                <DropdownMenuItem
-                  key={acc.role}
-                  onClick={() => switchRole(acc.role)}
-                  className="flex items-center justify-between text-xs cursor-pointer py-2"
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium text-foreground">
-                      {acc.name}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {getRoleLabel(acc.role)}
-                    </span>
-                  </div>
-                  {user?.role === acc.role && (
-                    <Badge variant="primary" className="text-[9px]">
-                      Active
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-3 py-2 border-b border-border">
+                <p className="text-xs font-semibold text-foreground truncate">
+                  {user?.full_name || "Employee"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+                <div className="mt-1">
+                  <Badge variant="primary" className="text-[9px]">
+                    {getRoleLabel(user?.role)}
+                  </Badge>
+                </div>
+              </div>
+              <DropdownMenuItem
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-2 text-xs cursor-pointer py-2 text-foreground hover:text-primary w-full"
+              >
+                <KeyRound className="h-3.5 w-3.5 text-primary" />
+                <span>My Profile & Password</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={logout}
-                className="text-destructive text-xs cursor-pointer flex items-center gap-2"
+                className="text-destructive text-xs cursor-pointer flex items-center gap-2 py-2"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>Sign Out</span>
@@ -349,7 +336,55 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
               align="end"
             />
 
-            {/* Ethereal Theme Palette Selector */}
+            {/* Account Profile Dropdown (Top Navbar) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 p-1 pl-2 pr-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer text-foreground transition"
+                >
+                  <Avatar
+                    src={user?.avatar_url}
+                    alt={user?.full_name || "User"}
+                    className="h-6 w-6 rounded-md shrink-0 border border-border"
+                  />
+                  <span className="hidden sm:inline font-medium text-xs max-w-[110px] truncate">
+                    {user?.full_name || "Akun"}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-3 py-2 border-b border-border">
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {user?.full_name || "Employee"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {user?.email}
+                  </p>
+                  <div className="mt-1">
+                    <Badge variant="primary" className="text-[9px]">
+                      {getRoleLabel(user?.role)}
+                    </Badge>
+                  </div>
+                </div>
+                <DropdownMenuItem
+                  onClick={() => navigate("/profile")}
+                  className="flex items-center gap-2 text-xs cursor-pointer py-2 text-foreground hover:text-primary"
+                >
+                  <KeyRound className="h-3.5 w-3.5 text-primary" />
+                  <span>My Profile & Password</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="text-destructive text-xs cursor-pointer flex items-center gap-2 py-2"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -404,49 +439,6 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 <Moon className="h-4 w-4 text-primary" />
               )}
             </button>
-
-            {/* Role Switcher in Top Bar */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer transition">
-                  <Badge
-                    variant={getRoleVariant(user?.role)}
-                    className="text-[11px] px-2 py-0.5"
-                  >
-                    {getRoleLabel(user?.role)}
-                  </Badge>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Switch Persona Role</DropdownMenuLabel>
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <DropdownMenuItem
-                    key={acc.role}
-                    onClick={() => switchRole(acc.role)}
-                    className="flex items-center justify-between text-xs cursor-pointer"
-                  >
-                    <span>{acc.name}</span>
-                    {user?.role === acc.role && (
-                      <Badge variant="primary" className="text-[9px]">
-                        Active
-                      </Badge>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Logout Button */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={logout}
-              className="text-xs flex items-center gap-1.5"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
           </div>
         </header>
 
@@ -520,12 +512,8 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 >
                   Return to Console
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => switchRole("admin")}
-                >
-                  Switch to Super Admin (Demo)
+                <Button variant="outline" size="sm" onClick={logout}>
+                  Sign Out
                 </Button>
               </div>
             </div>
