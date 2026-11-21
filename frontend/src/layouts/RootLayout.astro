@@ -40,6 +40,16 @@ const {
           document.documentElement.classList.remove('dark');
         }
         document.documentElement.setAttribute('data-color-theme', theme);
+        if (theme && theme !== 'default') {
+          let link = document.getElementById('ethereal-active-theme');
+          if (!link) {
+            link = document.createElement('link');
+            link.id = 'ethereal-active-theme';
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+          }
+          link.href = '/themes/' + theme + '.css';
+        }
       })();
     </script>
     <ClientRouter />
