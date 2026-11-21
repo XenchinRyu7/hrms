@@ -5,10 +5,10 @@
   "description": "Production-grade Enterprise Human Resource Management System powered by Ethereal UI, Astro 5, Go 1.25, and Supabase",
   "scripts": {
     "prepare": "husky",
-    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:frontend": "cd frontend && pnpm dev",
     "dev:backend": "cd backend && cargo run",
-    "build:frontend": "pnpm --filter frontend build",
-    "lint:frontend": "pnpm --filter frontend lint",
+    "build:frontend": "cd frontend && pnpm build",
+    "lint:frontend": "cd frontend && pnpm lint",
     "commitlint": "commitlint --edit",
     "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
     "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
