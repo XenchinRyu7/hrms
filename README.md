@@ -121,13 +121,13 @@ cd ethereal-hrms
 pnpm install
 ```
 
-### 3. Backend Setup (Go REST API)
+### 3. Backend Setup (Rust REST API)
 ```bash
 cd backend
 cp .env.example .env
 
-# Run Go backend server (starts on http://localhost:8080)
-go run ./cmd/server/main.go
+# Run Rust backend server (starts on http://localhost:8080)
+cargo run
 ```
 
 > [!NOTE]

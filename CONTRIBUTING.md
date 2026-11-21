@@ -67,9 +67,9 @@ CORS_ORIGIN=http://localhost:4321,http://localhost:3000
 In separate terminals:
 
 ```bash
-# Terminal 1: Run Go Backend API (Port 8080)
+# Terminal 1: Run Rust Backend API (Port 8080)
 pnpm dev:backend
-# or: cd backend && go run ./cmd/server/main.go
+# or: cd backend && cargo run
 
 # Terminal 2: Run Astro + Ethereal UI Frontend (Port 4321)
 pnpm dev:frontend

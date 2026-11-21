@@ -28,6 +28,7 @@ pub struct LeaveQuery {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct CreateLeavePayload {
     pub leave_type_id: String,
     pub start_date: String,
@@ -62,9 +63,7 @@ pub async fn get_balances(
     Query(query): Query<LeaveBalancesQuery>,
 ) -> impl IntoResponse {
     let emp_id = match auth.role.as_str() {
-        "admin" | "hr_manager" | "manager" => {
-            query.employee_id.as_deref().unwrap_or(&auth.id)
-        }
+        "admin" | "hr_manager" | "manager" => query.employee_id.as_deref().unwrap_or(&auth.id),
         _ => &auth.id,
     };
 
@@ -117,7 +116,9 @@ pub async fn create_request(
         .map(|t| t.name.clone())
         .unwrap_or_else(|| "Annual Leave".into());
 
-    let total_days = payload.total_days.unwrap_or_else(|| payload.days_count.unwrap_or(1.0) as i32);
+    let total_days = payload
+        .total_days
+        .unwrap_or_else(|| payload.days_count.unwrap_or(1.0) as i32);
 
     let req = LeaveRequest {
         id: id::gen_id("lev"),
@@ -165,11 +166,7 @@ pub async fn create_request(
             )
                 .into_response()
         }
-        Err(err) => (
-            StatusCode::BAD_REQUEST,
-            Json(ApiResponse::err(err)),
-        )
-            .into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(ApiResponse::err(err))).into_response(),
     }
 }
 
@@ -212,10 +209,6 @@ pub async fn update_status(
             )
                 .into_response()
         }
-        Err(err) => (
-            StatusCode::BAD_REQUEST,
-            Json(ApiResponse::err(err)),
-        )
-            .into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(ApiResponse::err(err))).into_response(),
     }
 }

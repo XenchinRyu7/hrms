@@ -1,0 +1,3 @@
+echo "🛡️ Verifying build integrity before push..."
+(cd backend && cargo check && cargo clippy -- -D warnings)
+(cd frontend && npm run build)

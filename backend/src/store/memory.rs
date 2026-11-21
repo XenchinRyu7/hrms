@@ -334,7 +334,8 @@ impl MemoryData {
             processed_at: None,
             created_at: now,
         };
-        self.payroll_periods.insert(period_nov.id.clone(), period_nov);
+        self.payroll_periods
+            .insert(period_nov.id.clone(), period_nov);
 
         // 6. Recruitment Jobs
         let job1 = JobPosting {
@@ -383,7 +384,11 @@ impl Store for MemoryStore {
     // -------------------------------------------------------------
     async fn get_employee_by_email(&self, email: &str) -> Option<Employee> {
         let guard = self.inner.read().await;
-        guard.employees.values().find(|e| e.email.eq_ignore_ascii_case(email)).cloned()
+        guard
+            .employees
+            .values()
+            .find(|e| e.email.eq_ignore_ascii_case(email))
+            .cloned()
     }
 
     async fn get_employee_by_id(&self, id: &str) -> Option<Employee> {
@@ -391,32 +396,42 @@ impl Store for MemoryStore {
         guard.employees.get(id).cloned()
     }
 
-    async fn list_employees(&self, role: Option<&str>, department_id: Option<&str>, search: Option<&str>) -> Vec<Employee> {
+    async fn list_employees(
+        &self,
+        role: Option<&str>,
+        department_id: Option<&str>,
+        search: Option<&str>,
+    ) -> Vec<Employee> {
         let guard = self.inner.read().await;
-        guard.employees.values().filter(|e| {
-            if let Some(r) = role {
-                if !r.is_empty() && e.role != r {
-                    return false;
-                }
-            }
-            if let Some(dept) = department_id {
-                if !dept.is_empty() && e.department_id.as_deref() != Some(dept) {
-                    return false;
-                }
-            }
-            if let Some(q) = search {
-                if !q.is_empty() {
-                    let q_lower = q.to_lowercase();
-                    let match_name = e.full_name.to_lowercase().contains(&q_lower);
-                    let match_email = e.email.to_lowercase().contains(&q_lower);
-                    let match_code = e.employee_code.to_lowercase().contains(&q_lower);
-                    if !match_name && !match_email && !match_code {
+        guard
+            .employees
+            .values()
+            .filter(|e| {
+                if let Some(r) = role {
+                    if !r.is_empty() && e.role != r {
                         return false;
                     }
                 }
-            }
-            true
-        }).cloned().collect()
+                if let Some(dept) = department_id {
+                    if !dept.is_empty() && e.department_id.as_deref() != Some(dept) {
+                        return false;
+                    }
+                }
+                if let Some(q) = search {
+                    if !q.is_empty() {
+                        let q_lower = q.to_lowercase();
+                        let match_name = e.full_name.to_lowercase().contains(&q_lower);
+                        let match_email = e.email.to_lowercase().contains(&q_lower);
+                        let match_code = e.employee_code.to_lowercase().contains(&q_lower);
+                        if !match_name && !match_email && !match_code {
+                            return false;
+                        }
+                    }
+                }
+                true
+            })
+            .cloned()
+            .collect()
     }
 
     async fn create_employee(&self, mut emp: Employee) -> Result<Employee, String> {
@@ -443,8 +458,14 @@ impl Store for MemoryStore {
 
     async fn update_employee(&self, id: &str, mut emp: Employee) -> Result<Employee, String> {
         let mut guard = self.inner.write().await;
-        let dept_name = emp.department_id.as_ref().and_then(|did| guard.departments.get(did).map(|d| d.name.clone()));
-        let job_title = emp.job_title_id.as_ref().and_then(|jid| guard.job_titles.get(jid).map(|j| j.title.clone()));
+        let dept_name = emp
+            .department_id
+            .as_ref()
+            .and_then(|did| guard.departments.get(did).map(|d| d.name.clone()));
+        let job_title = emp
+            .job_title_id
+            .as_ref()
+            .and_then(|jid| guard.job_titles.get(jid).map(|j| j.title.clone()));
 
         if let Some(existing) = guard.employees.get_mut(id) {
             existing.full_name = emp.full_name.clone();
@@ -501,7 +522,13 @@ impl Store for MemoryStore {
         guard.attendance.get(&key).cloned()
     }
 
-    async fn clock_in(&self, employee_id: &str, location: Option<&str>, notes: Option<&str>, ip: Option<&str>) -> Result<Attendance, String> {
+    async fn clock_in(
+        &self,
+        employee_id: &str,
+        location: Option<&str>,
+        notes: Option<&str>,
+        ip: Option<&str>,
+    ) -> Result<Attendance, String> {
         let mut guard = self.inner.write().await;
         let now = Utc::now();
         let today = now.format("%Y-%m-%d").to_string();
@@ -513,7 +540,10 @@ impl Store for MemoryStore {
             }
         }
 
-        let emp_name = guard.employees.get(employee_id).map(|e| e.full_name.clone());
+        let emp_name = guard
+            .employees
+            .get(employee_id)
+            .map(|e| e.full_name.clone());
 
         let att = Attendance {
             id: gen_id("att"),
@@ -584,26 +614,36 @@ impl Store for MemoryStore {
         Ok(att)
     }
 
-    async fn list_attendance(&self, employee_id: Option<&str>, start_date: Option<&str>, end_date: Option<&str>) -> Vec<Attendance> {
+    async fn list_attendance(
+        &self,
+        employee_id: Option<&str>,
+        start_date: Option<&str>,
+        end_date: Option<&str>,
+    ) -> Vec<Attendance> {
         let guard = self.inner.read().await;
-        let mut list: Vec<Attendance> = guard.attendance.values().filter(|a| {
-            if let Some(emp) = employee_id {
-                if !emp.is_empty() && a.employee_id != emp {
-                    return false;
+        let mut list: Vec<Attendance> = guard
+            .attendance
+            .values()
+            .filter(|a| {
+                if let Some(emp) = employee_id {
+                    if !emp.is_empty() && a.employee_id != emp {
+                        return false;
+                    }
                 }
-            }
-            if let Some(s) = start_date {
-                if !s.is_empty() && a.date.as_str() < s {
-                    return false;
+                if let Some(s) = start_date {
+                    if !s.is_empty() && a.date.as_str() < s {
+                        return false;
+                    }
                 }
-            }
-            if let Some(e) = end_date {
-                if !e.is_empty() && a.date.as_str() > e {
-                    return false;
+                if let Some(e) = end_date {
+                    if !e.is_empty() && a.date.as_str() > e {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect();
+                true
+            })
+            .cloned()
+            .collect();
 
         list.sort_by(|a, b| b.date.cmp(&a.date));
         list
@@ -619,26 +659,40 @@ impl Store for MemoryStore {
 
     async fn get_leave_balances(&self, employee_id: &str, year: i32) -> Vec<LeaveBalance> {
         let guard = self.inner.read().await;
-        guard.leave_balances.values().filter(|b| b.employee_id == employee_id && b.year == year).cloned().collect()
+        guard
+            .leave_balances
+            .values()
+            .filter(|b| b.employee_id == employee_id && b.year == year)
+            .cloned()
+            .collect()
     }
 
-    async fn list_leave_requests(&self, employee_id: Option<&str>, status: Option<&str>) -> Vec<LeaveRequest> {
+    async fn list_leave_requests(
+        &self,
+        employee_id: Option<&str>,
+        status: Option<&str>,
+    ) -> Vec<LeaveRequest> {
         let guard = self.inner.read().await;
-        let mut list: Vec<LeaveRequest> = guard.leave_requests.values().filter(|r| {
-            if let Some(emp) = employee_id {
-                if !emp.is_empty() && r.employee_id != emp {
-                    return false;
+        let mut list: Vec<LeaveRequest> = guard
+            .leave_requests
+            .values()
+            .filter(|r| {
+                if let Some(emp) = employee_id {
+                    if !emp.is_empty() && r.employee_id != emp {
+                        return false;
+                    }
                 }
-            }
-            if let Some(st) = status {
-                if !st.is_empty() && r.status != st {
-                    return false;
+                if let Some(st) = status {
+                    if !st.is_empty() && r.status != st {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect();
+                true
+            })
+            .cloned()
+            .collect();
 
-        list.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        list.sort_by_key(|a| std::cmp::Reverse(a.created_at));
         list
     }
 
@@ -665,7 +719,13 @@ impl Store for MemoryStore {
         Ok(req)
     }
 
-    async fn update_leave_request_status(&self, id: &str, status: &str, approver_id: &str, reason: Option<&str>) -> Result<LeaveRequest, String> {
+    async fn update_leave_request_status(
+        &self,
+        id: &str,
+        status: &str,
+        approver_id: &str,
+        reason: Option<&str>,
+    ) -> Result<LeaveRequest, String> {
         let mut guard = self.inner.write().await;
         let mut req = match guard.leave_requests.get(id) {
             Some(r) => r.clone(),
@@ -674,7 +734,10 @@ impl Store for MemoryStore {
 
         // Separation of Duties: Submitter cannot approve their own leave
         if req.employee_id == approver_id {
-            return Err("Separation of Duties violation: Submitter cannot approve their own leave request.".to_string());
+            return Err(
+                "Separation of Duties violation: Submitter cannot approve their own leave request."
+                    .to_string(),
+            );
         }
 
         let now = Utc::now();
@@ -709,34 +772,52 @@ impl Store for MemoryStore {
         list
     }
 
-    async fn create_payroll_period(&self, mut period: PayrollPeriod) -> Result<PayrollPeriod, String> {
+    async fn create_payroll_period(
+        &self,
+        mut period: PayrollPeriod,
+    ) -> Result<PayrollPeriod, String> {
         let mut guard = self.inner.write().await;
         if period.id.is_empty() {
             period.id = gen_id("per");
         }
         period.created_at = Utc::now();
-        guard.payroll_periods.insert(period.id.clone(), period.clone());
+        guard
+            .payroll_periods
+            .insert(period.id.clone(), period.clone());
         Ok(period)
     }
 
-    async fn list_payslips(&self, period_id: Option<&str>, employee_id: Option<&str>) -> Vec<Payslip> {
+    async fn list_payslips(
+        &self,
+        period_id: Option<&str>,
+        employee_id: Option<&str>,
+    ) -> Vec<Payslip> {
         let guard = self.inner.read().await;
-        guard.payslips.values().filter(|p| {
-            if let Some(per) = period_id {
-                if !per.is_empty() && p.period_id != per {
-                    return false;
+        guard
+            .payslips
+            .values()
+            .filter(|p| {
+                if let Some(per) = period_id {
+                    if !per.is_empty() && p.period_id != per {
+                        return false;
+                    }
                 }
-            }
-            if let Some(emp) = employee_id {
-                if !emp.is_empty() && p.employee_id != emp {
-                    return false;
+                if let Some(emp) = employee_id {
+                    if !emp.is_empty() && p.employee_id != emp {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect()
+                true
+            })
+            .cloned()
+            .collect()
     }
 
-    async fn generate_payslips_for_period(&self, period_id: &str, processed_by: &str) -> Result<(), String> {
+    async fn generate_payslips_for_period(
+        &self,
+        period_id: &str,
+        processed_by: &str,
+    ) -> Result<(), String> {
         let mut guard = self.inner.write().await;
         let period_name = match guard.payroll_periods.get(period_id) {
             Some(p) => p.name.clone(),
@@ -747,7 +828,11 @@ impl Store for MemoryStore {
         let employees_list: Vec<Employee> = guard.employees.values().cloned().collect();
 
         for emp in employees_list {
-            let basic_sal = guard.salary_structures.get(&emp.id).map(|s| s.basic_salary).unwrap_or(15000000.0);
+            let basic_sal = guard
+                .salary_structures
+                .get(&emp.id)
+                .map(|s| s.basic_salary)
+                .unwrap_or(15000000.0);
 
             // Accumulate overtime pay from attendance
             let mut ot_hours = 0.0;
@@ -762,7 +847,9 @@ impl Store for MemoryStore {
             // Accumulate approved reimbursements
             let mut reimb_amount = 0.0;
             for exp in guard.expenses.values() {
-                if exp.employee_id == emp.id && (exp.status == "approved" || exp.status == "reimbursed") {
+                if exp.employee_id == emp.id
+                    && (exp.status == "approved" || exp.status == "reimbursed")
+                {
                     reimb_amount += exp.amount;
                 }
             }
@@ -822,13 +909,18 @@ impl Store for MemoryStore {
         guard.salary_structures.get(employee_id).cloned()
     }
 
-    async fn save_salary_structure(&self, mut st: SalaryStructure) -> Result<SalaryStructure, String> {
+    async fn save_salary_structure(
+        &self,
+        mut st: SalaryStructure,
+    ) -> Result<SalaryStructure, String> {
         let mut guard = self.inner.write().await;
         if st.id.is_empty() {
             st.id = gen_id("sal");
         }
         st.created_at = Utc::now();
-        guard.salary_structures.insert(st.employee_id.clone(), st.clone());
+        guard
+            .salary_structures
+            .insert(st.employee_id.clone(), st.clone());
         Ok(st)
     }
 
@@ -837,21 +929,26 @@ impl Store for MemoryStore {
     // -------------------------------------------------------------
     async fn list_expenses(&self, employee_id: Option<&str>, status: Option<&str>) -> Vec<Expense> {
         let guard = self.inner.read().await;
-        let mut list: Vec<Expense> = guard.expenses.values().filter(|e| {
-            if let Some(emp) = employee_id {
-                if !emp.is_empty() && e.employee_id != emp {
-                    return false;
+        let mut list: Vec<Expense> = guard
+            .expenses
+            .values()
+            .filter(|e| {
+                if let Some(emp) = employee_id {
+                    if !emp.is_empty() && e.employee_id != emp {
+                        return false;
+                    }
                 }
-            }
-            if let Some(st) = status {
-                if !st.is_empty() && e.status != st {
-                    return false;
+                if let Some(st) = status {
+                    if !st.is_empty() && e.status != st {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect();
+                true
+            })
+            .cloned()
+            .collect();
 
-        list.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        list.sort_by_key(|a| std::cmp::Reverse(a.created_at));
         list
     }
 
@@ -874,7 +971,13 @@ impl Store for MemoryStore {
         Ok(exp)
     }
 
-    async fn update_expense_status(&self, id: &str, status: &str, approver_id: &str, reason: Option<&str>) -> Result<Expense, String> {
+    async fn update_expense_status(
+        &self,
+        id: &str,
+        status: &str,
+        approver_id: &str,
+        reason: Option<&str>,
+    ) -> Result<Expense, String> {
         let mut guard = self.inner.write().await;
         let mut exp = match guard.expenses.get(id) {
             Some(e) => e.clone(),
@@ -919,19 +1022,24 @@ impl Store for MemoryStore {
 
     async fn list_applicants(&self, job_id: Option<&str>, stage: Option<&str>) -> Vec<Applicant> {
         let guard = self.inner.read().await;
-        guard.applicants.values().filter(|a| {
-            if let Some(jid) = job_id {
-                if !jid.is_empty() && a.job_posting_id != jid {
-                    return false;
+        guard
+            .applicants
+            .values()
+            .filter(|a| {
+                if let Some(jid) = job_id {
+                    if !jid.is_empty() && a.job_posting_id != jid {
+                        return false;
+                    }
                 }
-            }
-            if let Some(st) = stage {
-                if !st.is_empty() && a.stage != st {
-                    return false;
+                if let Some(st) = stage {
+                    if !st.is_empty() && a.stage != st {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect()
+                true
+            })
+            .cloned()
+            .collect()
     }
 
     async fn create_applicant(&self, mut app: Applicant) -> Result<Applicant, String> {
@@ -962,21 +1070,30 @@ impl Store for MemoryStore {
         guard.cycles.values().cloned().collect()
     }
 
-    async fn list_goals(&self, employee_id: Option<&str>, cycle_id: Option<&str>) -> Vec<PerformanceGoal> {
+    async fn list_goals(
+        &self,
+        employee_id: Option<&str>,
+        cycle_id: Option<&str>,
+    ) -> Vec<PerformanceGoal> {
         let guard = self.inner.read().await;
-        guard.goals.values().filter(|g| {
-            if let Some(emp) = employee_id {
-                if !emp.is_empty() && g.employee_id != emp {
-                    return false;
+        guard
+            .goals
+            .values()
+            .filter(|g| {
+                if let Some(emp) = employee_id {
+                    if !emp.is_empty() && g.employee_id != emp {
+                        return false;
+                    }
                 }
-            }
-            if let Some(cyc) = cycle_id {
-                if !cyc.is_empty() && g.cycle_id != cyc {
-                    return false;
+                if let Some(cyc) = cycle_id {
+                    if !cyc.is_empty() && g.cycle_id != cyc {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).cloned().collect()
+                true
+            })
+            .cloned()
+            .collect()
     }
 
     async fn create_goal(&self, mut goal: PerformanceGoal) -> Result<PerformanceGoal, String> {
@@ -991,7 +1108,11 @@ impl Store for MemoryStore {
         Ok(goal)
     }
 
-    async fn update_goal(&self, id: &str, mut goal: PerformanceGoal) -> Result<PerformanceGoal, String> {
+    async fn update_goal(
+        &self,
+        id: &str,
+        mut goal: PerformanceGoal,
+    ) -> Result<PerformanceGoal, String> {
         let mut guard = self.inner.write().await;
         if let Some(existing) = guard.goals.get_mut(id) {
             existing.title = goal.title.clone();
@@ -1032,11 +1153,31 @@ impl Store for MemoryStore {
         let guard = self.inner.read().await;
         let today = Utc::now().format("%Y-%m-%d").to_string();
 
-        let active_today = guard.attendance.values().filter(|a| a.date == today && a.clock_in.is_some()).count() as i32;
-        let on_leave_today = guard.leave_requests.values().filter(|l| l.status == "approved" && l.start_date <= today && l.end_date >= today).count() as i32;
-        let pending_leaves = guard.leave_requests.values().filter(|l| l.status == "pending").count() as i32;
-        let pending_expenses = guard.expenses.values().filter(|e| e.status == "pending").count() as i32;
-        let open_jobs = guard.jobs.values().filter(|j| j.status == "published").count() as i32;
+        let active_today = guard
+            .attendance
+            .values()
+            .filter(|a| a.date == today && a.clock_in.is_some())
+            .count() as i32;
+        let on_leave_today = guard
+            .leave_requests
+            .values()
+            .filter(|l| l.status == "approved" && l.start_date <= today && l.end_date >= today)
+            .count() as i32;
+        let pending_leaves = guard
+            .leave_requests
+            .values()
+            .filter(|l| l.status == "pending")
+            .count() as i32;
+        let pending_expenses = guard
+            .expenses
+            .values()
+            .filter(|e| e.status == "pending")
+            .count() as i32;
+        let open_jobs = guard
+            .jobs
+            .values()
+            .filter(|j| j.status == "published")
+            .count() as i32;
         let active_applicants = guard.applicants.len() as i32;
 
         DashboardTelemetry {

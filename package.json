@@ -8,7 +8,8 @@
     "dev:frontend": "cd frontend && pnpm dev",
     "dev:backend": "cd backend && cargo run",
     "build:frontend": "cd frontend && pnpm build",
-    "lint:frontend": "cd frontend && pnpm lint",
+    "lint:frontend": "cd frontend && npx prettier --check 'src/**/*.{ts,tsx,astro}'",
+    "lint:backend": "cd backend && cargo clippy -- -D warnings",
     "commitlint": "commitlint --edit",
     "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
     "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
@@ -26,8 +27,8 @@
     "frontend/**/*.{ts,tsx,astro,json,css}": [
       "prettier --write --ignore-unknown"
     ],
-    "backend/**/*.go": [
-      "gofmt -w"
+    "backend/**/*.rs": [
+      "rustfmt --edition 2021"
     ]
   }
 }

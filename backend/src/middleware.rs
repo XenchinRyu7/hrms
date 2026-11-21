@@ -8,6 +8,7 @@ use axum::{
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde_json::json;
 
+#[allow(dead_code)]
 pub struct AuthUser {
     pub id: String,
     pub email: String,
@@ -65,6 +66,7 @@ where
     }
 }
 
+#[allow(clippy::result_large_err)]
 pub fn check_roles(user: &AuthUser, allowed_roles: &[&str]) -> Result<(), Response> {
     if allowed_roles.contains(&user.role.as_str()) {
         Ok(())
