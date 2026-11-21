@@ -1,6 +1,6 @@
 import React from "react";
 import { ThemeProvider } from "../../lib/theme-context";
-import { AuthProvider } from "../../lib/auth-context";
+import { AuthProvider, useAuth } from "../../lib/auth-context";
 import { NavProvider, useNav } from "../../lib/nav-context";
 import { NotificationProvider } from "../../lib/notification-context";
 import { HRMSAppShell } from "./HRMSAppShell";
@@ -15,6 +15,7 @@ import { ExpensesView } from "../views/ExpensesView";
 import { AuditView } from "../views/AuditView";
 import { SettingsView } from "../views/SettingsView";
 import { ProfileView } from "../views/ProfileView";
+import { LoginView } from "../views/LoginView";
 
 interface AppContainerProps {
   initialPath?: string;
@@ -56,6 +57,42 @@ function DynamicView({
   }
 }
 
+function AuthContentGuard({
+  initialPath,
+  children,
+}: {
+  initialPath: string;
+  children?: React.ReactNode;
+}) {
+  const { user, token, isLoading } = useAuth();
+
+  // 1. Loading state while checking token/me
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 space-y-3">
+        <div className="h-12 w-12 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm tracking-wider shadow-sm animate-pulse">
+          EH
+        </div>
+        <p className="text-xs text-muted-foreground font-medium">
+          Memeriksa sesi EHMRS...
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated state: display clean, professional login view
+  if (!token || !user) {
+    return <LoginView />;
+  }
+
+  // 3. Authenticated: render full HRMS application shell
+  return (
+    <HRMSAppShell activePath={initialPath}>
+      <DynamicView fallbackChildren={children} />
+    </HRMSAppShell>
+  );
+}
+
 export function AppContainer({
   initialPath = "/",
   children,
@@ -65,9 +102,9 @@ export function AppContainer({
       <AuthProvider>
         <NavProvider initialPath={initialPath}>
           <NotificationProvider>
-            <HRMSAppShell activePath={initialPath}>
-              <DynamicView fallbackChildren={children} />
-            </HRMSAppShell>
+            <AuthContentGuard initialPath={initialPath}>
+              {children}
+            </AuthContentGuard>
           </NotificationProvider>
         </NavProvider>
       </AuthProvider>
