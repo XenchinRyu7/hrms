@@ -100,11 +100,38 @@ func (h *LeaveHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
+	existing, err := h.store.GetLeaveRequestByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Permohonan cuti tidak ditemukan"})
+		return
+	}
+
+	// Separation of Duties (SoD) Rule: Submitter cannot approve their own leave request
+	if existing.EmployeeID == currentUserID.(string) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Separation of Duties (SoD) violation: Anda tidak dapat menyetujui permohonan cuti milik Anda sendiri.",
+		})
+		return
+	}
+
 	updated, err := h.store.UpdateLeaveRequestStatus(id, input.Status, currentUserID.(string), input.Reason)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	_ = h.store.LogAction(&models.AuditLog{
+		UserID:   currentUserID.(string),
+		Action:   "LEAVE_" + input.Status,
+		Entity:   "leave_requests",
+		EntityID: id,
+		Details: map[string]interface{}{
+			"claimant_id": existing.EmployeeID,
+			"start_date":  existing.StartDate,
+			"end_date":    existing.EndDate,
+			"status":      input.Status,
+		},
+	})
 
 	c.JSON(http.StatusOK, updated)
 }

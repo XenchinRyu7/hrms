@@ -63,13 +63,13 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Executive Console",
         href: "/",
         icon: LayoutDashboard,
-        roles: ["admin", "hr_manager", "manager", "employee"],
+        roles: ["admin", "hr_manager", "manager"],
       },
       {
         label: "Employees & Org",
         href: "/employees",
         icon: Users,
-        roles: ["admin", "hr_manager", "manager", "employee"],
+        roles: ["admin", "hr_manager", "manager"],
       },
     ],
   },
@@ -85,10 +85,10 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Finance & Talent",
+    title: "Finance & Operations",
     items: [
       {
-        label: "Payroll & Comp",
+        label: "Payroll & Compensation",
         href: "/payroll",
         icon: Wallet,
         roles: ["admin", "hr_manager", "manager", "employee"],
@@ -181,6 +181,20 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   const isAuthorized =
     !currentNavItem || currentNavItem.roles.includes(userRole);
 
+  const getItemLabel = (item: NavItem) => {
+    if (item.href === "/payroll") {
+      return userRole === "admin" || userRole === "hr_manager"
+        ? "Payroll & Compensation"
+        : "My Payslips & Comp";
+    }
+    if (item.href === "/expenses") {
+      return userRole === "employee"
+        ? "My Claims & Expense"
+        : "Expense Approvals & Claims";
+    }
+    return item.label;
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row transition-colors duration-150">
       {/* Sidebar (Desktop) */}
@@ -225,7 +239,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                     <Icon
                       className={`h-4 w-4 shrink-0 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`}
                     />
-                    <span>{item.label}</span>
+                    <span>{getItemLabel(item)}</span>
                   </NavLink>
                 );
               })}
@@ -465,7 +479,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
+                      <span>{getItemLabel(item)}</span>
                     </NavLink>
                   );
                 })}
@@ -490,7 +504,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 Access Restricted &bull; 403 Forbidden
               </Badge>
               <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">
-                Enterprise RBAC Policy Enforced
+                RBAC Policy Enforced
               </h2>
               <p className="text-xs text-muted-foreground max-w-md mb-6 leading-relaxed">
                 Your current role (

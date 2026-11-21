@@ -53,8 +53,8 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 			protected.PUT("/auth/profile", authH.UpdateProfile)
 			protected.PUT("/auth/password", authH.ChangePassword)
 
-			// Executive Telemetry & Dashboard
-			protected.GET("/dashboard/telemetry", dashH.GetTelemetry)
+			// Executive Telemetry & Dashboard (Requires Manager or Above)
+			protected.GET("/dashboard/telemetry", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager, models.RoleManager), dashH.GetTelemetry)
 
 			// Employee Management & Org Directory
 			protected.GET("/employees", empH.ListEmployees)
@@ -78,18 +78,18 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 			protected.POST("/leave/requests", leaveH.CreateRequest)
 			protected.PATCH("/leave/requests/:id/status", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager, models.RoleManager), leaveH.UpdateStatus)
 
-			// Payroll & Compensation
-			protected.GET("/payroll/periods", payH.ListPeriods)
+			// Payroll & Compensation (Restricted to HR Manager & Admin)
+			protected.GET("/payroll/periods", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), payH.ListPeriods)
 			protected.POST("/payroll/periods", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), payH.CreatePeriod)
 			protected.GET("/payroll/payslips", payH.ListPayslips)
 			protected.POST("/payroll/periods/:period_id/generate", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), payH.GeneratePayslips)
-			protected.GET("/payroll/salary-structure/:employee_id", payH.GetSalaryStructure)
+			protected.GET("/payroll/salary-structure/:employee_id", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), payH.GetSalaryStructure)
 			protected.POST("/payroll/salary-structure", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), payH.SaveSalaryStructure)
 
 			// Recruitment (ATS)
 			protected.GET("/recruitment/jobs", recH.ListJobs)
 			protected.POST("/recruitment/jobs", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), recH.CreateJob)
-			protected.GET("/recruitment/applicants", recH.ListApplicants)
+			protected.GET("/recruitment/applicants", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), recH.ListApplicants)
 			protected.POST("/recruitment/applicants", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), recH.CreateApplicant)
 			protected.PATCH("/recruitment/applicants/:id/stage", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), recH.UpdateStage)
 
@@ -99,10 +99,10 @@ func SetupRouter(cfg *config.Config, store database.Store) *gin.Engine {
 			protected.POST("/performance/goals", perfH.CreateGoal)
 			protected.PUT("/performance/goals/:id", perfH.UpdateGoal)
 
-			// Expenses & Claims
+			// Expenses & Claims (Reimbursement Approval is exclusive to HR Manager and Admin)
 			protected.GET("/expenses", expH.ListExpenses)
 			protected.POST("/expenses", expH.CreateExpense)
-			protected.PATCH("/expenses/:id/status", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager, models.RoleManager), expH.UpdateStatus)
+			protected.PATCH("/expenses/:id/status", middleware.RequireRoles(models.RoleHRManager, models.RoleAdmin), expH.UpdateStatus)
 
 			// Audit Logs
 			protected.GET("/audit/logs", middleware.RequireRoles(models.RoleAdmin, models.RoleHRManager), auditH.ListAuditLogs)

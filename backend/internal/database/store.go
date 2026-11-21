@@ -28,6 +28,7 @@ type Store interface {
 	ListLeaveTypes() ([]models.LeaveType, error)
 	GetLeaveBalances(employeeID string, year int) ([]models.LeaveBalance, error)
 	ListLeaveRequests(employeeID, status string) ([]models.LeaveRequest, error)
+	GetLeaveRequestByID(id string) (*models.LeaveRequest, error)
 	CreateLeaveRequest(req *models.LeaveRequest) error
 	UpdateLeaveRequestStatus(requestID, status, approverID, reason string) (*models.LeaveRequest, error)
 
@@ -54,6 +55,7 @@ type Store interface {
 
 	// Expenses
 	ListExpenses(employeeID, status string) ([]models.Expense, error)
+	GetExpenseByID(id string) (*models.Expense, error)
 	CreateExpense(exp *models.Expense) error
 	UpdateExpenseStatus(expenseID, status, approverID, reason string) (*models.Expense, error)
 

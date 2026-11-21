@@ -9,6 +9,8 @@ import {
   FileText,
   DollarSign,
   Tag,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import {
   Button,
@@ -45,6 +47,9 @@ export function ExpensesView() {
     expense_date: new Date().toISOString().split("T")[0],
     description: "",
   });
+
+  const canApproveReimbursement =
+    user?.role === "admin" || user?.role === "hr_manager";
 
   const isManagerOrAdmin =
     user?.role === "admin" ||
@@ -150,11 +155,14 @@ export function ExpensesView() {
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Expense & Reimbursement Claims
+            {!isManagerOrAdmin
+              ? "My Reimbursements & Claims"
+              : "Expense Approvals & Claims Management"}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Employee corporate expenditures, travel allowance, and receipt
-            approval audits.
+            {!isManagerOrAdmin
+              ? "Pengajuan klaim pengeluaran pribadi dan pemantauan status reimbursement."
+              : "Corporate expenditures approval queue, separation-of-duties enforcement, and financial audit."}
           </p>
         </div>
 
@@ -205,6 +213,22 @@ export function ExpensesView() {
           <p className="text-[11px] text-muted-foreground">
             Requires manager sign-off
           </p>
+        </div>
+      </div>
+
+      {/* Separation of Duties (SoD) Policy Alert Banner */}
+      <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card/60 text-xs shadow-sm">
+        <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+        <div className="flex-1">
+          <span className="font-semibold text-foreground">
+            Separation of Duties (SoD) & Governance:
+          </span>{" "}
+          <span className="text-muted-foreground">
+            Persetujuan reimbursement dan pembayaran klaim adalah wewenang
+            eksklusif <strong>HR & Finance</strong>. Team Lead / Manager
+            berwenang memantau dan mengajukan klaim, namun tidak dapat melakukan
+            approval finansial. Tidak ada self-approval.
+          </span>
         </div>
       </div>
 
@@ -286,31 +310,47 @@ export function ExpensesView() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {exp.status === "pending" && isManagerOrAdmin ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            disabled={actionLoading === exp.id}
-                            onClick={() =>
-                              handleUpdateStatus(exp.id, "approved")
-                            }
-                            className="h-7 px-2 text-[11px] flex items-center gap-1"
-                          >
-                            <Check className="h-3 w-3" />
-                            <span>Approve</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={actionLoading === exp.id}
-                            onClick={() => setRejectExpenseId(exp.id)}
-                            className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 flex items-center gap-1"
-                          >
-                            <X className="h-3 w-3" />
-                            <span>Reject</span>
-                          </Button>
-                        </div>
+                      {exp.status === "pending" ? (
+                        canApproveReimbursement ? (
+                          exp.employee_id === user?.id ? (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] text-amber-500 font-medium px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20"
+                              title="Separation of Duties: Anda adalah pemohon klaim ini sehingga tidak dapat melakukan self-approval."
+                            >
+                              <ShieldAlert className="h-3 w-3" />
+                              <span>Self-Claim (SoD Locked)</span>
+                            </span>
+                          ) : (
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                disabled={actionLoading === exp.id}
+                                onClick={() =>
+                                  handleUpdateStatus(exp.id, "approved")
+                                }
+                                className="h-7 px-2 text-[11px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Check className="h-3 w-3" />
+                                <span>Approve</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={actionLoading === exp.id}
+                                onClick={() => setRejectExpenseId(exp.id)}
+                                className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 flex items-center gap-1 cursor-pointer"
+                              >
+                                <X className="h-3 w-3" />
+                                <span>Reject</span>
+                              </Button>
+                            </div>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground font-medium px-2 py-1 rounded-md bg-muted/40 border border-border">
+                            <span>Awaiting HR Approval</span>
+                          </span>
+                        )
                       ) : (
                         <span className="text-[11px] text-muted-foreground font-mono">
                           {exp.approved_at
