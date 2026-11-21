@@ -18,6 +18,13 @@ backend/bin/
 backend/*.exe
 *.exe
 
+# Rust build artifacts
+target/
+backend/target/
+
+# Local migration backup
+backend-go/
+
 # OS & Editor
 .DS_Store
 Thumbs.db

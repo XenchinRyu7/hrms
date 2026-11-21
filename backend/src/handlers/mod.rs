@@ -1,0 +1,11 @@
+pub mod attendance;
+pub mod audit;
+pub mod auth;
+pub mod dashboard;
+pub mod employees;
+pub mod expenses;
+pub mod leave;
+pub mod payroll;
+pub mod performance;
+pub mod recruitment;
+pub mod system;

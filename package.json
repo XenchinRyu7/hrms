@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "husky",
     "dev:frontend": "pnpm --filter frontend dev",
-    "dev:backend": "cd backend && go run ./cmd/server/main.go",
+    "dev:backend": "cd backend && cargo run",
     "build:frontend": "pnpm --filter frontend build",
     "lint:frontend": "pnpm --filter frontend lint",
     "commitlint": "commitlint --edit",
