@@ -92,23 +92,27 @@ type Employee struct {
 }
 
 type Attendance struct {
-	ID           string     `json:"id"`
-	EmployeeID   string     `json:"employee_id"`
-	EmployeeName string     `json:"employee_name,omitempty"`
-	Date         string     `json:"date"`
-	ClockIn      *time.Time `json:"clock_in,omitempty"`
-	ClockOut     *time.Time `json:"clock_out,omitempty"`
-	TotalHours   float64    `json:"total_hours"`
-	Status       string     `json:"status"`        // on_time, late, early_leave, absent
-	WorkLocation string     `json:"work_location"` // office, remote, field
-	IPAddress    string     `json:"ip_address,omitempty"`
-	Notes        string     `json:"notes,omitempty"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID            string     `json:"id"`
+	EmployeeID    string     `json:"employee_id"`
+	EmployeeName  string     `json:"employee_name,omitempty"`
+	Date          string     `json:"date"`
+	ClockIn       *time.Time `json:"clock_in,omitempty"`
+	ClockOut      *time.Time `json:"clock_out,omitempty"`
+	TotalHours    float64    `json:"total_hours"`    // Gross duration
+	BreakHours    float64    `json:"break_hours"`    // Standard 1-hour break
+	WorkHours     float64    `json:"work_hours"`     // Effective hours (Total - Break)
+	OvertimeHours float64    `json:"overtime_hours"` // Overtime beyond 8h
+	OvertimePay   float64    `json:"overtime_pay"`   // Rp 50.000 / overtime hour
+	Status        string     `json:"status"`         // present, completed, overtime, under_hours
+	WorkLocation  string     `json:"work_location"`  // office, remote, client_site
+	IPAddress     string     `json:"ip_address,omitempty"`
+	Notes         string     `json:"notes,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
 type ClockInRequest struct {
-	WorkLocation string `json:"work_location"` // office, remote, field
+	WorkLocation string `json:"work_location"` // office, remote, client_site
 	Notes        string `json:"notes"`
 }
 

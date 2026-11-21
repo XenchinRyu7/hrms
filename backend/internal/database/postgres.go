@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -405,9 +406,10 @@ func (s *PostgresStore) GetTodayAttendance(employeeID string) (*models.Attendanc
 func (s *PostgresStore) ClockIn(employeeID, location, notes, ip string) (*models.Attendance, error) {
 	now := time.Now()
 	id := uuid.New().String()
-	status := "on_time"
-	if now.Hour() > 9 || (now.Hour() == 9 && now.Minute() > 15) {
-		status = "late"
+	// Flexible hours: Any clock-in time is accepted as present
+	status := "present"
+	if location == "" {
+		location = "office"
 	}
 
 	query := `
@@ -453,6 +455,33 @@ func (s *PostgresStore) ClockOut(employeeID string) (*models.Attendance, error) 
 		}
 		return nil, err
 	}
+
+	// Calculate 1h rest break & overtime beyond 8h work
+	breakHours := 0.0
+	if att.TotalHours >= 5.0 {
+		breakHours = 1.0
+	} else if att.TotalHours > 1.0 {
+		breakHours = 1.0
+	}
+	att.BreakHours = breakHours
+
+	effectiveWork := math.Max(0.0, att.TotalHours-breakHours)
+	att.WorkHours = math.Round(effectiveWork*100) / 100.0
+
+	if att.WorkHours > 8.0 {
+		att.OvertimeHours = math.Round((att.WorkHours-8.0)*100) / 100.0
+		att.OvertimePay = att.OvertimeHours * 50000.0
+		att.Status = "overtime"
+	} else if att.WorkHours >= 8.0 {
+		att.OvertimeHours = 0.0
+		att.OvertimePay = 0.0
+		att.Status = "completed"
+	} else {
+		att.OvertimeHours = 0.0
+		att.OvertimePay = 0.0
+		att.Status = "under_hours"
+	}
+
 	return &att, nil
 }
 
@@ -640,6 +669,46 @@ func (s *PostgresStore) CreateLeaveRequest(req *models.LeaveRequest) error {
 
 	_, err := s.db.Exec(query, req.ID, req.EmployeeID, req.LeaveTypeID, req.StartDate, req.EndDate, req.TotalDays, req.Reason)
 	return err
+}
+
+func (s *PostgresStore) GetLeaveRequestByID(id string) (*models.LeaveRequest, error) {
+	query := `
+		SELECT
+			lr.id, lr.employee_id, lr.leave_type_id,
+			lr.start_date::text, lr.end_date::text, lr.total_days,
+			COALESCE(lr.reason, ''), lr.status,
+			COALESCE(lr.approver_id::text, ''),
+			COALESCE(e2.full_name, ''),
+			lr.approved_at, COALESCE(lr.rejection_reason, ''),
+			lr.created_at, e.full_name, lt.name
+		FROM leave_requests lr
+		JOIN employees e ON lr.employee_id = e.id
+		JOIN leave_types lt ON lr.leave_type_id = lt.id
+		LEFT JOIN employees e2 ON lr.approver_id = e2.id
+		WHERE lr.id = $1;`
+
+	var req models.LeaveRequest
+	var approverID, approverName, rejectionReason string
+	var approvedAt *time.Time
+
+	err := s.db.QueryRow(query, id).Scan(
+		&req.ID, &req.EmployeeID, &req.LeaveTypeID,
+		&req.StartDate, &req.EndDate, &req.TotalDays,
+		&req.Reason, &req.Status,
+		&approverID, &approverName,
+		&approvedAt, &rejectionReason,
+		&req.CreatedAt, &req.EmployeeName, &req.LeaveTypeName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if approverID != "" {
+		req.ApproverID = &approverID
+		req.ApproverName = approverName
+	}
+	req.ApprovedAt = approvedAt
+	req.RejectionReason = rejectionReason
+	return &req, nil
 }
 
 func (s *PostgresStore) UpdateLeaveRequestStatus(requestID, status, approverID, reason string) (*models.LeaveRequest, error) {
@@ -1225,6 +1294,36 @@ func (s *PostgresStore) CreateExpense(exp *models.Expense) error {
 
 	_, err := s.db.Exec(query, exp.ID, exp.EmployeeID, exp.Title, exp.Category, exp.Amount, exp.ExpenseDate, exp.Description)
 	return err
+}
+
+func (s *PostgresStore) GetExpenseByID(id string) (*models.Expense, error) {
+	query := `
+		SELECT
+			ex.id, ex.employee_id, ex.title, ex.category, ex.amount,
+			ex.expense_date::text, COALESCE(ex.description, ''),
+			COALESCE(ex.receipt_url, ''), ex.status,
+			COALESCE(ex.approver_id::text, ''),
+			COALESCE(e2.full_name, ''),
+			ex.created_at
+		FROM expenses ex
+		JOIN employees e ON ex.employee_id = e.id
+		LEFT JOIN employees e2 ON ex.approver_id = e2.id
+		WHERE ex.id = $1;`
+
+	var exp models.Expense
+	var approverID string
+	err := s.db.QueryRow(query, id).Scan(
+		&exp.ID, &exp.EmployeeID, &exp.Title, &exp.Category, &exp.Amount,
+		&exp.ExpenseDate, &exp.Description, &exp.ReceiptURL, &exp.Status,
+		&approverID, &exp.ApproverName, &exp.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if approverID != "" {
+		exp.ApproverID = &approverID
+	}
+	return &exp, nil
 }
 
 func (s *PostgresStore) UpdateExpenseStatus(expenseID, status, approverID, reason string) (*models.Expense, error) {

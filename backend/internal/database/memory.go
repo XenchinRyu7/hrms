@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -224,10 +225,10 @@ func (s *MemoryStore) seedData() {
 	job1 := models.JobPosting{
 		ID: "jp-1", Title: "Senior AI / ML Platform Engineer", DepartmentID: "dept-3", DepartmentName: "Software Engineering",
 		Location: "Hybrid (Jakarta)", EmploymentType: "Full-time", ExperienceLevel: "Senior",
-		SalaryRange: "Rp 25.000.000 - Rp 40.000.000",
-		Description: "Architecting autonomous agent workflows and telemetry pipelines.",
+		SalaryRange:  "Rp 25.000.000 - Rp 40.000.000",
+		Description:  "Architecting autonomous agent workflows and telemetry pipelines.",
 		Requirements: "5+ years with Go, Python, LLMs, and distributed systems.",
-		Status: "published", ApplicantCount: 2, CreatedAt: time.Now(),
+		Status:       "published", ApplicantCount: 2, CreatedAt: time.Now(),
 	}
 	s.jobPostings[job1.ID] = job1
 
@@ -424,10 +425,8 @@ func (s *MemoryStore) ClockIn(employeeID, location, notes, ip string) (*models.A
 	}
 
 	now := time.Now()
-	status := "on_time"
-	if now.Hour() > 9 || (now.Hour() == 9 && now.Minute() > 15) {
-		status = "late"
-	}
+	// Flexible work hours: Any clock-in time is accepted as active shift
+	status := "present"
 	if location == "" {
 		location = "office"
 	}
@@ -468,9 +467,36 @@ func (s *MemoryStore) ClockOut(employeeID string) (*models.Attendance, error) {
 	now := time.Now()
 	att.ClockOut = &now
 	diff := now.Sub(*att.ClockIn).Hours()
-	att.TotalHours = float64(int(diff*100)) / 100.0
-	att.UpdatedAt = now
+	att.TotalHours = math.Round(diff*100) / 100.0
 
+	// Work policy: Standard 8 hours productive work + 1 hour automatic rest break
+	breakHours := 0.0
+	if att.TotalHours >= 5.0 {
+		breakHours = 1.0
+	} else if att.TotalHours > 1.0 {
+		breakHours = 1.0
+	}
+	att.BreakHours = breakHours
+
+	effectiveWork := math.Max(0.0, att.TotalHours-breakHours)
+	att.WorkHours = math.Round(effectiveWork*100) / 100.0
+
+	// Overtime policy: Work beyond 8 effective hours is paid at Rp 50.000 / hour
+	if att.WorkHours > 8.0 {
+		att.OvertimeHours = math.Round((att.WorkHours-8.0)*100) / 100.0
+		att.OvertimePay = att.OvertimeHours * 50000.0
+		att.Status = "overtime"
+	} else if att.WorkHours >= 8.0 {
+		att.OvertimeHours = 0.0
+		att.OvertimePay = 0.0
+		att.Status = "completed"
+	} else {
+		att.OvertimeHours = 0.0
+		att.OvertimePay = 0.0
+		att.Status = "under_hours"
+	}
+
+	att.UpdatedAt = now
 	s.attendance[key] = att
 	return &att, nil
 }
@@ -557,6 +583,16 @@ func (s *MemoryStore) CreateLeaveRequest(req *models.LeaveRequest) error {
 
 	s.leaveRequests[req.ID] = *req
 	return nil
+}
+
+func (s *MemoryStore) GetLeaveRequestByID(id string) (*models.LeaveRequest, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	req, ok := s.leaveRequests[id]
+	if !ok {
+		return nil, errors.New("leave request not found")
+	}
+	return &req, nil
 }
 
 func (s *MemoryStore) UpdateLeaveRequestStatus(requestID, status, approverID, reason string) (*models.LeaveRequest, error) {
@@ -654,7 +690,25 @@ func (s *MemoryStore) GeneratePayslipsForPeriod(periodID, processedBy string) er
 			}
 		}
 
-		totAllowances := struct_.HousingAllowance + struct_.TransportAllowance + struct_.MealAllowance
+		// Overtime accumulation from Attendance
+		empOvertimeHours := 0.0
+		empOvertimePay := 0.0
+		for _, att := range s.attendance {
+			if att.EmployeeID == emp.ID {
+				empOvertimeHours += att.OvertimeHours
+				empOvertimePay += att.OvertimePay
+			}
+		}
+
+		// Approved Reimbursements payout
+		empReimbursements := 0.0
+		for _, exp := range s.expenses {
+			if exp.EmployeeID == emp.ID && (exp.Status == "approved" || exp.Status == "reimbursed") {
+				empReimbursements += exp.Amount
+			}
+		}
+
+		totAllowances := struct_.HousingAllowance + struct_.TransportAllowance + struct_.MealAllowance + empOvertimePay + empReimbursements
 		taxAmt := struct_.BasicSalary * (struct_.TaxRate / 100.0)
 		insAmt := struct_.BasicSalary * (struct_.InsuranceRate / 100.0)
 		totDeductions := taxAmt + insAmt
@@ -677,14 +731,17 @@ func (s *MemoryStore) GeneratePayslipsForPeriod(periodID, processedBy string) er
 			NetSalary:       net,
 			Breakdown: map[string]interface{}{
 				"allowances": map[string]float64{
-					"housing":   struct_.HousingAllowance,
-					"transport": struct_.TransportAllowance,
-					"meal":      struct_.MealAllowance,
+					"housing":        struct_.HousingAllowance,
+					"transport":      struct_.TransportAllowance,
+					"meal":           struct_.MealAllowance,
+					"overtime_pay":   empOvertimePay,
+					"reimbursements": empReimbursements,
 				},
 				"deductions": map[string]float64{
 					"tax":       taxAmt,
 					"insurance": insAmt,
 				},
+				"overtime_hours": empOvertimeHours,
 			},
 			Status:    "issued",
 			CreatedAt: time.Now(),
@@ -872,6 +929,16 @@ func (s *MemoryStore) CreateExpense(exp *models.Expense) error {
 	}
 	s.expenses[exp.ID] = *exp
 	return nil
+}
+
+func (s *MemoryStore) GetExpenseByID(id string) (*models.Expense, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	exp, ok := s.expenses[id]
+	if !ok {
+		return nil, errors.New("expense not found")
+	}
+	return &exp, nil
 }
 
 func (s *MemoryStore) UpdateExpenseStatus(expenseID, status, approverID, reason string) (*models.Expense, error) {

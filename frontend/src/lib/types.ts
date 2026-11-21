@@ -46,8 +46,20 @@ export interface Attendance {
   clock_in?: string;
   clock_out?: string;
   total_hours: number;
-  status: "on_time" | "late" | "early_leave" | "absent";
-  work_location: "office" | "remote" | "field";
+  break_hours?: number;
+  work_hours?: number;
+  overtime_hours?: number;
+  overtime_pay?: number;
+  status:
+    | "on_time"
+    | "late"
+    | "early_leave"
+    | "absent"
+    | "present"
+    | "completed"
+    | "overtime"
+    | "under_hours";
+  work_location: "office" | "remote" | "field" | "client_site";
   ip_address?: string;
   notes?: string;
 }
