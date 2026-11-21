@@ -23,3 +23,5 @@ backend/*.exe
 Thumbs.db
 .vscode/
 .idea/
+
+theming.mdx

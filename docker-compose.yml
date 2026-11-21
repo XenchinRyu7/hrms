@@ -1,0 +1,62 @@
+# Default docker-compose points to development environment
+# For development: docker compose up --build
+# For production:  docker compose -f docker-compose.prod.yml up --build -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ethereal_hrms_db_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ethereal_hrms
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ethereal_hrms"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: ethereal_hrms_backend_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://postgres:password123@postgres:5432/ethereal_hrms?sslmode=disable"
+      JWT_SECRET: "super-secret-jwt-key-for-ethereal-enterprise-hrms-2026"
+      CORS_ORIGIN: "http://localhost:4321,http://localhost:3000,http://127.0.0.1:4321"
+    volumes:
+      - ./backend:/app
+      - /app/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: ethereal_hrms_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "4321:4321"
+    environment:
+      PUBLIC_API_URL: "http://localhost:8080/api/v1"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_dev_data:
