@@ -127,7 +127,7 @@ export function RecruitmentView() {
       loadData();
       if (selectedCandidate?.id === applicantId) {
         setSelectedCandidate((prev) =>
-          prev ? { ...prev, stage: nextStage } : null,
+          prev ? { ...prev, stage: nextStage as any } : null,
         );
       }
     } catch (err: any) {

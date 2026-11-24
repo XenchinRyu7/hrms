@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Clock,
+  Calendar,
   Wallet,
   Briefcase,
   Target,
@@ -82,6 +83,12 @@ const NAV_SECTIONS: NavSection[] = [
         icon: Clock,
         roles: ["admin", "hr_manager", "manager", "employee"],
       },
+      {
+        label: "Time Off & Leave",
+        href: "/leave",
+        icon: Calendar,
+        roles: ["admin", "hr_manager", "manager", "employee"],
+      },
     ],
   },
   {
@@ -140,19 +147,23 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
     useNotification();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const normalizePath = (p: string) => p.replace(/\/+$/, "") || "/";
   const effectivePath = currentPath || activePath || "/";
+  const normalizedPath = normalizePath(effectivePath);
   const userRole = user?.role || "employee";
 
-  const getRoleVariant = (role?: string) => {
+  const getRoleVariant = (
+    role?: string,
+  ): "primary" | "blue" | "outline" | "default" => {
     switch (role) {
       case "admin":
         return "primary";
       case "hr_manager":
-        return "secondary";
+        return "blue";
       case "manager":
         return "outline";
       default:
-        return "muted";
+        return "default";
     }
   };
 
@@ -177,7 +188,9 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
 
   // Check if current route is allowed for user
   const allNavItems = NAV_SECTIONS.flatMap((s) => s.items);
-  const currentNavItem = allNavItems.find((i) => i.href === effectivePath);
+  const currentNavItem = allNavItems.find(
+    (i) => normalizePath(i.href) === normalizedPath,
+  );
   const isAuthorized =
     !currentNavItem || currentNavItem.roles.includes(userRole);
 
@@ -225,7 +238,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
               </div>
               {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = effectivePath === item.href;
+                const isActive = normalizePath(item.href) === normalizedPath;
                 return (
                   <NavLink
                     key={item.href}
@@ -466,7 +479,7 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
                 </div>
                 {section.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = effectivePath === item.href;
+                  const isActive = normalizePath(item.href) === normalizedPath;
                   return (
                     <NavLink
                       key={item.href}

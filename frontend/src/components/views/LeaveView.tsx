@@ -156,7 +156,7 @@ export function LeaveView() {
         );
       default:
         return (
-          <Badge variant="secondary" className="text-[10px]">
+          <Badge variant="default" className="text-[10px]">
             Pending Approval
           </Badge>
         );
@@ -493,7 +493,6 @@ export function LeaveView() {
         confirmText="Confirm Rejection"
         cancelText="Cancel"
         variant="destructive"
-        loading={actionLoading === rejectTargetId}
         onConfirm={async () => {
           if (rejectTargetId) {
             await handleUpdateStatus(rejectTargetId, "rejected");

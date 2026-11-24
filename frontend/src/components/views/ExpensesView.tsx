@@ -302,7 +302,7 @@ export function ExpensesView() {
                             ? "primary"
                             : exp.status === "rejected"
                               ? "outline"
-                              : "secondary"
+                              : "default"
                         }
                         className={`text-[10px] capitalize ${exp.status === "rejected" ? "text-destructive border-destructive/30" : ""}`}
                       >
@@ -512,7 +512,6 @@ export function ExpensesView() {
         confirmText="Reject Claim"
         cancelText="Cancel"
         variant="destructive"
-        loading={actionLoading === rejectExpenseId}
         onConfirm={async () => {
           if (rejectExpenseId) {
             await handleUpdateStatus(rejectExpenseId, "rejected");

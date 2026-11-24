@@ -161,16 +161,18 @@ export function EmployeesView() {
     }
   };
 
-  const getRoleVariant = (role: string) => {
+  const getRoleVariant = (
+    role: string,
+  ): "primary" | "blue" | "outline" | "default" => {
     switch (role) {
       case "admin":
         return "primary";
       case "hr_manager":
-        return "secondary";
+        return "blue";
       case "manager":
         return "outline";
       default:
-        return "muted";
+        return "default";
     }
   };
 

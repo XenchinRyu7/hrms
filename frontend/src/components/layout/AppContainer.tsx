@@ -28,8 +28,9 @@ function DynamicView({
   fallbackChildren?: React.ReactNode;
 }) {
   const { currentPath } = useNav();
+  const normalized = currentPath.replace(/\/+$/, "") || "/";
 
-  switch (currentPath) {
+  switch (normalized) {
     case "/":
       return <DashboardView />;
     case "/employees":

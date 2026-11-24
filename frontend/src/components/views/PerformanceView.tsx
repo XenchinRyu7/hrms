@@ -242,9 +242,7 @@ export function PerformanceView() {
                     </div>
 
                     <Badge
-                      variant={
-                        g.status === "completed" ? "primary" : "secondary"
-                      }
+                      variant={g.status === "completed" ? "primary" : "default"}
                       className="text-[10px] capitalize shrink-0"
                     >
                       {g.status.replace("_", " ")}

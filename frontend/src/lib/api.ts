@@ -210,6 +210,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getSalaryStructure: (employee_id: string) =>
+    request<any>(`/payroll/salary-structure/${employee_id}`),
+  saveSalaryStructure: (data: any) =>
+    request<any>("/payroll/salary-structure", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   getPayslips: (params?: { period_id?: string; employee_id?: string }) => {
     const q = new URLSearchParams();
     if (params?.period_id) q.set("period_id", params.period_id);
