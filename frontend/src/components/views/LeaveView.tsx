@@ -66,11 +66,14 @@ export function LeaveView() {
           employee_id: !isManagerOrAdmin ? user?.id : undefined,
         }),
       ]);
-      setBalances(balList);
-      setTypes(typeList);
-      setRequests(reqList);
-      if (typeList.length > 0 && !newRequest.leave_type_id) {
-        setNewRequest((prev) => ({ ...prev, leave_type_id: typeList[0].id }));
+      const validBal = Array.isArray(balList) ? balList : [];
+      const validType = Array.isArray(typeList) ? typeList : [];
+      const validReq = Array.isArray(reqList) ? reqList : [];
+      setBalances(validBal);
+      setTypes(validType);
+      setRequests(validReq);
+      if (validType.length > 0 && !newRequest.leave_type_id) {
+        setNewRequest((prev) => ({ ...prev, leave_type_id: validType[0].id }));
       }
     } catch (err) {
       console.error("Failed to load leave data:", err);

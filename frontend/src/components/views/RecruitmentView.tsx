@@ -101,10 +101,12 @@ export function RecruitmentView() {
         api.getJobPostings(),
         api.getApplicants({ job_id: selectedJob || undefined }),
       ]);
-      setJobs(jobList);
-      setApplicants(appList);
-      if (jobList.length > 0 && !newCandidate.job_id) {
-        setNewCandidate((prev) => ({ ...prev, job_id: jobList[0].id }));
+      const validJobs = Array.isArray(jobList) ? jobList : [];
+      const validApps = Array.isArray(appList) ? appList : [];
+      setJobs(validJobs);
+      setApplicants(validApps);
+      if (validJobs.length > 0 && !newCandidate.job_id) {
+        setNewCandidate((prev) => ({ ...prev, job_id: validJobs[0].id }));
       }
     } catch (err) {
       console.error("Failed to load recruitment data:", err);

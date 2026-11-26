@@ -65,11 +65,12 @@ export function PayrollView() {
         }),
         isAdminOrHR ? api.getEmployees() : Promise.resolve([]),
       ]);
-      const validPeriods = perList || [];
-      const validSlips = slipList || [];
+      const validPeriods = Array.isArray(perList) ? perList : [];
+      const validSlips = Array.isArray(slipList) ? slipList : [];
+      const validEmps = Array.isArray(empList) ? empList : [];
       setPeriods(validPeriods);
       setPayslips(validSlips);
-      setEmployees(empList || []);
+      setEmployees(validEmps);
 
       if (validPeriods.length > 0 && !selectedPeriod) {
         setSelectedPeriod(validPeriods[0].id);

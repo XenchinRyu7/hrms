@@ -26,15 +26,29 @@ function getRequestUrl(endpoint: string): string {
     return `${backendBase}/api/v1${cleanEndpoint}`;
   }
 
-  // 2. Client-side browser runtime: use public path prefix routed via Vercel rewrites (/api/v1)
-  const publicBase =
-    (typeof import.meta !== "undefined" &&
-      (import.meta as any).env?.PUBLIC_API_URL) ||
-    (typeof window !== "undefined" && window.location?.port === "4321"
-      ? "http://localhost:8080/api/v1"
-      : "/api/v1");
+  // 2. Custom environment variable override
+  if (
+    typeof import.meta !== "undefined" &&
+    (import.meta as any).env?.PUBLIC_API_URL
+  ) {
+    const publicBase = (import.meta as any).env.PUBLIC_API_URL.replace(
+      /\/$/,
+      "",
+    );
+    return `${publicBase}${cleanEndpoint}`;
+  }
 
-  return `${publicBase.replace(/\/$/, "")}${cleanEndpoint}`;
+  // 3. Client-side browser runtime on localhost (port 4321, 4322, etc.)
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  ) {
+    return `http://localhost:8080/api/v1${cleanEndpoint}`;
+  }
+
+  // 4. Production fallback via proxy/rewrite
+  return `/api/v1${cleanEndpoint}`;
 }
 
 export function getAuthToken(): string | null {
@@ -87,13 +101,25 @@ async function request<T>(
     try {
       const errJson = await res.json();
       if (errJson.error) errorMsg = errJson.error;
+      else if (errJson.message) errorMsg = errJson.message;
     } catch {
       // fallback
     }
     throw new Error(errorMsg);
   }
 
-  return res.json();
+  const json = await res.json();
+  // Automatically unwrap standard backend ApiResponse { success: true, data: T }
+  if (
+    json !== null &&
+    typeof json === "object" &&
+    "success" in json &&
+    "data" in json
+  ) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export const api = {

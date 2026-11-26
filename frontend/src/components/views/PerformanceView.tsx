@@ -62,8 +62,8 @@ export function PerformanceView() {
           employee_id: !isManagerOrAdmin ? user?.id : undefined,
         }),
       ]);
-      setCycles(cycList);
-      setGoals(goalList);
+      setCycles(Array.isArray(cycList) ? cycList : []);
+      setGoals(Array.isArray(goalList) ? goalList : []);
     } catch (err) {
       console.error("Failed to load performance goals:", err);
     } finally {

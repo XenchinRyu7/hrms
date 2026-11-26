@@ -62,9 +62,10 @@ export function ExpensesView() {
         status: filterStatus || undefined,
         employee_id: !isManagerOrAdmin ? user?.id : undefined,
       });
-      setExpenses(list);
+      setExpenses(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error("Failed to load expenses:", err);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }

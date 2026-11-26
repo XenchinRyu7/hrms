@@ -202,67 +202,6 @@ export function LoginView({ onSuccess }: LoginViewProps) {
               )}
             </Button>
           </form>
-
-          {/* Preset Demo Accounts */}
-          <div className="pt-2 border-t border-border">
-            <p className="text-[11px] font-semibold text-muted-foreground mb-2 text-center">
-              Quick Login Demo Accounts:
-            </p>
-            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@ethereal.hr");
-                  setPassword("password123");
-                }}
-                className="p-1.5 text-left rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer"
-              >
-                <div className="font-semibold text-primary">Super Admin</div>
-                <div className="text-muted-foreground truncate">
-                  admin@ethereal.hr
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("hr@ethereal.hr");
-                  setPassword("password123");
-                }}
-                className="p-1.5 text-left rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer"
-              >
-                <div className="font-semibold text-primary">HR Director</div>
-                <div className="text-muted-foreground truncate">
-                  hr@ethereal.hr
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("saeful@ethereal.hr");
-                  setPassword("password123");
-                }}
-                className="p-1.5 text-left rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer"
-              >
-                <div className="font-semibold text-primary">Saeful (Lead)</div>
-                <div className="text-muted-foreground truncate">
-                  saeful@ethereal.hr
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("employee@ethereal.hr");
-                  setPassword("password123");
-                }}
-                className="p-1.5 text-left rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer"
-              >
-                <div className="font-semibold text-primary">Staff Employee</div>
-                <div className="text-muted-foreground truncate">
-                  employee@ethereal.hr
-                </div>
-              </button>
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
