@@ -7,7 +7,7 @@
     "start": "astro dev --port 4321",
     "build": "astro build",
     "preview": "astro preview",
-    "test:e2e": "astro build && playwright test"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.1",

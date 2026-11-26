@@ -5,12 +5,12 @@ export default defineConfig({
   timeout: 30000,
   retries: 0,
   webServer: {
-    command: "npx astro preview --port 4323",
-    port: 4323,
-    reuseExistingServer: false,
+    command: "npx astro dev --port 4321",
+    port: 4321,
+    reuseExistingServer: true,
   },
   use: {
-    baseURL: "http://localhost:4323",
+    baseURL: "http://localhost:4321",
     headless: true,
   },
 });

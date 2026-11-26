@@ -11,8 +11,30 @@ test.describe("EHMRS Full UI & Sidebar Navigation Flow", () => {
       pageErrors.push(err.message);
     });
 
+    page.on("console", (msg) => {
+      const text = msg.text();
+      if (
+        msg.type() === "error" ||
+        text.includes("Error hydrating") ||
+        text.includes("error loading dynamically imported module") ||
+        text.includes("NS_ERROR_CORRUPTED_CONTENT") ||
+        text.includes("disallowed MIME type")
+      ) {
+        pageErrors.push(text);
+      }
+    });
+
     page.on("requestfailed", (req) => {
       failedRequests.push(`${req.url()} (${req.failure()?.errorText})`);
+    });
+
+    page.on("response", (res) => {
+      if (
+        res.status() >= 400 &&
+        (res.url().includes(".vite/deps") || res.url().includes(".js"))
+      ) {
+        failedRequests.push(`${res.url()} (Status ${res.status()})`);
+      }
     });
 
     // 1. Visit Login Page
