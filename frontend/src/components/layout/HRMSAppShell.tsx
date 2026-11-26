@@ -42,6 +42,7 @@ import { useNotification } from "../../lib/notification-context";
 interface HRMSAppShellProps {
   children: React.ReactNode;
   activePath?: string;
+  currentPath?: string;
 }
 
 interface NavItem {
@@ -139,16 +140,20 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
+export function HRMSAppShell({
+  children,
+  activePath,
+  currentPath: propCurrentPath,
+}: HRMSAppShellProps) {
   const { user, logout } = useAuth();
-  const { currentPath, navigate } = useNav();
+  const { currentPath: navCurrentPath, navigate } = useNav();
   const { mode, colorTheme, toggleMode, setColorTheme } = useTheme();
   const { notifications, markAsRead, markAllAsRead, clearAll, dismiss } =
     useNotification();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const normalizePath = (p: string) => p.replace(/\/+$/, "") || "/";
-  const effectivePath = currentPath || activePath || "/";
+  const effectivePath = propCurrentPath || navCurrentPath || activePath || "/";
   const normalizedPath = normalizePath(effectivePath);
   const userRole = user?.role || "employee";
 
@@ -211,7 +216,10 @@ export function HRMSAppShell({ children, activePath }: HRMSAppShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row transition-colors duration-150">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-sidebar/50 backdrop-blur-md sticky top-0 h-screen z-30">
+      <aside
+        data-astro-transition-persist="sidebar"
+        className="hidden md:flex w-64 flex-col border-r border-border bg-sidebar/50 backdrop-blur-md sticky top-0 h-screen z-30"
+      >
         {/* Brand Header */}
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">

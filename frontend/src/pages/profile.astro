@@ -4,5 +4,5 @@ import { ProfilePage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="My Profile & Security — EHMRS">
-  <ProfilePage client:only="react" />
+  <ProfilePage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

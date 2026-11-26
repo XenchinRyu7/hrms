@@ -4,5 +4,5 @@ import { SettingsPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="System Settings & RBAC — Ethereal HRMS">
-  <SettingsPage client:only="react" />
+  <SettingsPage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

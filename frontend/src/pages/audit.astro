@@ -4,5 +4,5 @@ import { AuditPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Compliance & Audit Logs — Ethereal HRMS">
-  <AuditPage client:only="react" />
+  <AuditPage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

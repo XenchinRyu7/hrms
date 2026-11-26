@@ -4,5 +4,5 @@ import { LeavePage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Leave & Absence Management — Ethereal HRMS">
-  <LeavePage client:only="react" />
+  <LeavePage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

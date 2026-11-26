@@ -4,5 +4,5 @@ import { DashboardPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Executive Console — Ethereal HRMS">
-  <DashboardPage client:only="react" />
+  <DashboardPage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

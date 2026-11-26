@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface NavContextType {
   currentPath: string;
@@ -6,39 +6,55 @@ interface NavContextType {
 }
 
 const NavContext = createContext<NavContextType>({
-  currentPath: '/',
+  currentPath: "/",
   navigate: () => {},
 });
 
 export function NavProvider({
   children,
-  initialPath = '/',
+  initialPath = "/",
+  currentPath: propCurrentPath,
 }: {
   children: React.ReactNode;
   initialPath?: string;
+  currentPath?: string;
 }) {
-  const [currentPath, setCurrentPath] = useState(initialPath);
+  const [currentPath, setCurrentPath] = useState(
+    propCurrentPath || initialPath,
+  );
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Sync with real browser path on mount
-      setCurrentPath(window.location.pathname || initialPath);
-
-      const onPopState = () => {
-        setCurrentPath(window.location.pathname);
-      };
-      window.addEventListener('popstate', onPopState);
-      return () => window.removeEventListener('popstate', onPopState);
+    if (propCurrentPath) {
+      setCurrentPath(propCurrentPath);
     }
-  }, [initialPath]);
+  }, [propCurrentPath]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const updatePath = () => {
+        setCurrentPath(
+          window.location.pathname || propCurrentPath || initialPath,
+        );
+      };
+      // Sync on mount
+      updatePath();
+
+      window.addEventListener("popstate", updatePath);
+      document.addEventListener("astro:page-load", updatePath);
+      return () => {
+        window.removeEventListener("popstate", updatePath);
+        document.removeEventListener("astro:page-load", updatePath);
+      };
+    }
+  }, [initialPath, propCurrentPath]);
 
   const navigate = (path: string) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (window.location.pathname !== path) {
-        window.history.pushState({}, '', path);
+        window.history.pushState({}, "", path);
       }
       setCurrentPath(path);
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   };
 
@@ -67,8 +83,8 @@ export function NavLink({
     if (
       !e.defaultPrevented &&
       href &&
-      !href.startsWith('http') &&
-      !href.startsWith('//') &&
+      !href.startsWith("http") &&
+      !href.startsWith("//") &&
       !e.ctrlKey &&
       !e.metaKey &&
       !e.shiftKey

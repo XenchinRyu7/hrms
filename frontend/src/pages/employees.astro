@@ -4,5 +4,5 @@ import { EmployeesPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Employees & Org Directory — Ethereal HRMS">
-  <EmployeesPage client:only="react" />
+  <EmployeesPage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

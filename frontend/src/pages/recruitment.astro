@@ -4,5 +4,5 @@ import { RecruitmentPage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Recruitment & ATS Pipeline — Ethereal HRMS">
-  <RecruitmentPage client:only="react" />
+  <RecruitmentPage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

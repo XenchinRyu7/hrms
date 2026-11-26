@@ -4,5 +4,5 @@ import { AttendancePage } from '../components/pages/Pages';
 ---
 
 <RootLayout title="Attendance & Timesheets — Ethereal HRMS">
-  <AttendancePage client:only="react" />
+  <AttendancePage client:only="react" currentPath={Astro.url.pathname} transition:persist="hrms-page" />
 </RootLayout>

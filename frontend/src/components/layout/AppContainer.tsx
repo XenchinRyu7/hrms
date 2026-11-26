@@ -19,6 +19,7 @@ import { LoginView } from "../views/LoginView";
 
 interface AppContainerProps {
   initialPath?: string;
+  currentPath?: string;
   children?: React.ReactNode;
 }
 
@@ -60,9 +61,11 @@ function DynamicView({
 
 function AuthContentGuard({
   initialPath,
+  currentPath,
   children,
 }: {
   initialPath: string;
+  currentPath?: string;
   children?: React.ReactNode;
 }) {
   const { user, token, isLoading } = useAuth();
@@ -88,7 +91,7 @@ function AuthContentGuard({
 
   // 3. Authenticated: render full HRMS application shell
   return (
-    <HRMSAppShell activePath={initialPath}>
+    <HRMSAppShell activePath={initialPath} currentPath={currentPath}>
       <DynamicView fallbackChildren={children} />
     </HRMSAppShell>
   );
@@ -96,14 +99,19 @@ function AuthContentGuard({
 
 export function AppContainer({
   initialPath = "/",
+  currentPath,
   children,
 }: AppContainerProps) {
+  const effectiveCurrent = currentPath || initialPath;
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NavProvider initialPath={initialPath}>
+        <NavProvider initialPath={initialPath} currentPath={effectiveCurrent}>
           <NotificationProvider>
-            <AuthContentGuard initialPath={initialPath}>
+            <AuthContentGuard
+              initialPath={initialPath}
+              currentPath={effectiveCurrent}
+            >
               {children}
             </AuthContentGuard>
           </NotificationProvider>
