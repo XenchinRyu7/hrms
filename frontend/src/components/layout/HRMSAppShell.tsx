@@ -153,7 +153,7 @@ export function HRMSAppShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const normalizePath = (p: string) => p.replace(/\/+$/, "") || "/";
-  const effectivePath = propCurrentPath || navCurrentPath || activePath || "/";
+  const effectivePath = navCurrentPath || propCurrentPath || activePath || "/";
   const normalizedPath = normalizePath(effectivePath);
   const userRole = user?.role || "employee";
 
