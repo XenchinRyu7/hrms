@@ -22,9 +22,19 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         .route("/auth/login", post(handlers::auth::login))
         .route("/auth/me", get(handlers::auth::me))
         .route("/auth/profile", put(handlers::auth::update_profile))
-        .route("/auth/change-password", post(handlers::auth::change_password))
+        .route(
+            "/auth/change-password",
+            post(handlers::auth::change_password).put(handlers::auth::change_password),
+        )
+        .route(
+            "/auth/password",
+            post(handlers::auth::change_password).put(handlers::auth::change_password),
+        )
         // Dashboard
-        .route("/dashboard/telemetry", get(handlers::dashboard::get_telemetry))
+        .route(
+            "/dashboard/telemetry",
+            get(handlers::dashboard::get_telemetry),
+        )
         // Employees & Organization
         .route(
             "/employees",
@@ -41,8 +51,15 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         // Attendance
         .route("/attendance/today", get(handlers::attendance::get_today))
         .route("/attendance/clock-in", post(handlers::attendance::clock_in))
-        .route("/attendance/clock-out", post(handlers::attendance::clock_out))
+        .route(
+            "/attendance/clock-out",
+            post(handlers::attendance::clock_out),
+        )
         .route("/attendance", get(handlers::attendance::list_attendance))
+        .route(
+            "/attendance/history",
+            get(handlers::attendance::list_attendance),
+        )
         // Leave
         .route("/leave/types", get(handlers::leave::list_types))
         .route("/leave/balances", get(handlers::leave::get_balances))
@@ -52,7 +69,7 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         )
         .route(
             "/leave/requests/{id}/status",
-            put(handlers::leave::update_status),
+            put(handlers::leave::update_status).patch(handlers::leave::update_status),
         )
         // Payroll
         .route(
@@ -79,7 +96,7 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         )
         .route(
             "/expenses/{id}/status",
-            put(handlers::expenses::update_status),
+            put(handlers::expenses::update_status).patch(handlers::expenses::update_status),
         )
         // Recruitment
         .route(
@@ -88,14 +105,18 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         )
         .route(
             "/recruitment/applicants",
-            get(handlers::recruitment::list_applicants).post(handlers::recruitment::create_applicant),
+            get(handlers::recruitment::list_applicants)
+                .post(handlers::recruitment::create_applicant),
         )
         .route(
             "/recruitment/applicants/{id}/stage",
-            put(handlers::recruitment::update_stage),
+            put(handlers::recruitment::update_stage).patch(handlers::recruitment::update_stage),
         )
         // Performance
-        .route("/performance/cycles", get(handlers::performance::list_cycles))
+        .route(
+            "/performance/cycles",
+            get(handlers::performance::list_cycles),
+        )
         .route(
             "/performance/goals",
             get(handlers::performance::list_goals).post(handlers::performance::create_goal),
@@ -108,7 +129,5 @@ pub fn create_router(store: Arc<dyn Store>) -> Router {
         .route("/audit/logs", get(handlers::audit::list_audit_logs))
         .with_state(store);
 
-    Router::new()
-        .nest("/api/v1", api_v1)
-        .layer(cors)
+    Router::new().nest("/api/v1", api_v1).layer(cors)
 }

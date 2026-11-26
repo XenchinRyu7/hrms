@@ -114,8 +114,8 @@ export const api = {
       body: JSON.stringify(data),
     }),
   changePassword: (data: { current_password?: string; new_password: string }) =>
-    request<{ message: string }>("/auth/password", {
-      method: "PUT",
+    request<{ message: string }>("/auth/change-password", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
@@ -171,7 +171,7 @@ export const api = {
     if (params?.employee_id) q.set("employee_id", params.employee_id);
     if (params?.start_date) q.set("start_date", params.start_date);
     if (params?.end_date) q.set("end_date", params.end_date);
-    return request<Attendance[]>(`/attendance/history?${q.toString()}`);
+    return request<Attendance[]>(`/attendance?${q.toString()}`);
   },
 
   // Leave
