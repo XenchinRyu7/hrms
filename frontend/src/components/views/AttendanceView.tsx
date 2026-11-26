@@ -134,7 +134,7 @@ export function AttendanceView() {
       case "present":
       case "on_time":
         return (
-          <Badge variant="default" className="text-[10px]">
+          <Badge variant="secondary" className="text-[10px]">
             Hadir (Shift Aktif)
           </Badge>
         );
@@ -158,7 +158,7 @@ export function AttendanceView() {
         );
       default:
         return (
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="muted" className="text-[10px]">
             {status}
           </Badge>
         );

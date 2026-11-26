@@ -159,16 +159,16 @@ export function HRMSAppShell({
 
   const getRoleVariant = (
     role?: string,
-  ): "primary" | "blue" | "outline" | "default" => {
+  ): "primary" | "secondary" | "outline" | "muted" => {
     switch (role) {
       case "admin":
         return "primary";
       case "hr_manager":
-        return "blue";
+        return "secondary";
       case "manager":
         return "outline";
       default:
-        return "default";
+        return "muted";
     }
   };
 

@@ -496,6 +496,7 @@ export function LeaveView() {
         confirmText="Confirm Rejection"
         cancelText="Cancel"
         variant="destructive"
+        loading={actionLoading === rejectTargetId}
         onConfirm={async () => {
           if (rejectTargetId) {
             await handleUpdateStatus(rejectTargetId, "rejected");

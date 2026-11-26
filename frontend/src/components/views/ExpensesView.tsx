@@ -513,6 +513,7 @@ export function ExpensesView() {
         confirmText="Reject Claim"
         cancelText="Cancel"
         variant="destructive"
+        loading={actionLoading === rejectExpenseId}
         onConfirm={async () => {
           if (rejectExpenseId) {
             await handleUpdateStatus(rejectExpenseId, "rejected");
