@@ -6,7 +6,8 @@
     "dev": "astro dev --port 4321",
     "start": "astro dev --port 4321",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test:e2e": "astro build && playwright test"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.1",
@@ -31,6 +32,7 @@
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

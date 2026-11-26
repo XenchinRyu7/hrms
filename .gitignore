@@ -32,3 +32,7 @@ Thumbs.db
 .idea/
 
 theming.mdx
+
+# Test artifacts
+test-results/
+playwright-report/

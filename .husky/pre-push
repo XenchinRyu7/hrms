@@ -1,3 +1,5 @@
 echo "🛡️ Verifying build integrity before push..."
 (cd backend && cargo check && cargo clippy -- -D warnings)
 (cd frontend && npm run build)
+echo "🧪 Running Playwright E2E UI verification..."
+(cd frontend && npx playwright test)
