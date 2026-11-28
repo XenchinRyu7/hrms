@@ -16,6 +16,9 @@ import {
   Receipt,
   Clock,
   UserCheck,
+  HandCoins,
+  Plus,
+  Check,
 } from "lucide-react";
 import {
   Button,
@@ -35,6 +38,43 @@ import { useNotification } from "../../lib/notification-context";
 import { exportToCSV, printPayslip } from "../../lib/export";
 import type { PayrollPeriod, Payslip, User } from "../../lib/types";
 
+export interface SalaryAdvanceItem {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  amount: number;
+  request_date: string;
+  reason: string;
+  installments: number;
+  status: "pending" | "approved" | "disbursed" | "repaid";
+  monthly_deduction: number;
+}
+
+const INITIAL_SALARY_ADVANCES: SalaryAdvanceItem[] = [
+  {
+    id: "adv-1",
+    employee_id: "emp-01",
+    employee_name: "Alex Thorne",
+    amount: 3000000,
+    request_date: "20 Nov 2026",
+    reason: "Biaya perbaikan kendaraan operasional",
+    installments: 3,
+    status: "approved",
+    monthly_deduction: 1000000,
+  },
+  {
+    id: "adv-2",
+    employee_id: "emp-02",
+    employee_name: "Sarah Jenkins",
+    amount: 1500000,
+    request_date: "25 Nov 2026",
+    reason: "Kebutuhan medis keluarga mendesak",
+    installments: 1,
+    status: "pending",
+    monthly_deduction: 1500000,
+  },
+];
+
 export function PayrollView() {
   const { user } = useAuth();
   const { toast } = useNotification();
@@ -46,6 +86,77 @@ export function PayrollView() {
   const [processing, setProcessing] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
   const [isConfirmRunOpen, setIsConfirmRunOpen] = useState(false);
+
+  // Tab State
+  const [payrollTab, setPayrollTab] = useState<"slips" | "advances">("slips");
+
+  // Salary Advance State
+  const [advances, setAdvances] = useState<SalaryAdvanceItem[]>(
+    INITIAL_SALARY_ADVANCES,
+  );
+  const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
+  const [advanceForm, setAdvanceForm] = useState({
+    employee_id: "",
+    amount: 2000000,
+    installments: 1,
+    reason: "",
+  });
+
+  const handleApproveAdvance = (id: string) => {
+    setAdvances((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, status: "approved" as const } : a,
+      ),
+    );
+    toast.success(
+      "Kasbon Disetujui",
+      "Pengajuan kasbon disetujui dan akan dipotong otomatis pada payroll berjalan.",
+    );
+  };
+
+  const handleRejectAdvance = (id: string) => {
+    setAdvances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: "repaid" as const } : a)),
+    );
+    toast.info(
+      "Kasbon Ditolak",
+      "Pengajuan pinjaman karyawan telah dibatalkan.",
+    );
+  };
+
+  const handleCreateAdvance = (e: React.FormEvent) => {
+    e.preventDefault();
+    const emp = employees.find((x) => x.id === advanceForm.employee_id);
+    const added: SalaryAdvanceItem = {
+      id: `adv-${Date.now()}`,
+      employee_id: advanceForm.employee_id || user?.id || "emp-01",
+      employee_name: emp?.full_name || user?.full_name || "Karyawan",
+      amount: advanceForm.amount,
+      request_date: new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      reason: advanceForm.reason || "Kebutuhan pribadi darurat",
+      installments: advanceForm.installments,
+      status: "pending",
+      monthly_deduction: Math.round(
+        advanceForm.amount / (advanceForm.installments || 1),
+      ),
+    };
+    setAdvances((prev) => [added, ...prev]);
+    setIsAdvanceModalOpen(false);
+    setAdvanceForm({
+      employee_id: "",
+      amount: 2000000,
+      installments: 1,
+      reason: "",
+    });
+    toast.success(
+      "Kasbon Berhasil Diajukan",
+      `Pengajuan kasbon sebesar ${formatIDR(added.amount)} sedang menunggu approval finance.`,
+    );
+  };
 
   // Manual Salary Setting Modal State
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
@@ -349,117 +460,277 @@ export function PayrollView() {
         </div>
       )}
 
-      {/* Payslips Table */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-card-foreground">
-              {isAdminOrHR ? "Daftar Slip Gaji Karyawan" : "Slip Gaji Saya"}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Rincian gaji pokok, uang lembur, reimbursement, dan take home pay
-            </p>
+      {/* Switcher Tab: Slip Gaji vs Kasbon Karyawan */}
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPayrollTab("slips")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              payrollTab === "slips"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            <span>Daftar Slip Gaji (Payroll)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPayrollTab("advances")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              payrollTab === "advances"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            <HandCoins className="h-3.5 w-3.5" />
+            <span>Kasbon &amp; Pinjaman Karyawan</span>
+            {advances.filter((a) => a.status === "pending").length > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-[9px] px-1.5 py-0 bg-amber-500/20 text-amber-600"
+              >
+                {advances.filter((a) => a.status === "pending").length}
+              </Badge>
+            )}
+          </button>
+        </div>
+
+        {payrollTab === "advances" && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsAdvanceModalOpen(true)}
+            className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Ajukan Kasbon Darurat</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Tab: Payslips Table */}
+      {payrollTab === "slips" && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-card-foreground">
+                {isAdminOrHR ? "Daftar Slip Gaji Karyawan" : "Slip Gaji Saya"}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Rincian gaji pokok, uang lembur, reimbursement, dan take home
+                pay
+              </p>
+            </div>
+
+            {isAdminOrHR && periods.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="text-xs rounded-xl border border-border bg-muted/40 px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {periods.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          {isAdminOrHR && periods.length > 0 && (
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="text-xs rounded-xl border border-border bg-muted/40 px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {periods.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
-              <tr>
-                <th className="py-3.5 px-4">Karyawan</th>
-                <th className="py-3.5 px-4">Departemen & Jabatan</th>
-                <th className="py-3.5 px-4">Gaji Pokok</th>
-                <th className="py-3.5 px-4">Lembur & Tunjangan</th>
-                <th className="py-3.5 px-4">Potongan</th>
-                <th className="py-3.5 px-4">Gaji Bersih</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Rincian</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(payslips || []).length > 0 ? (
-                (payslips || []).map((slip) => (
-                  <tr key={slip.id} className="hover:bg-muted/30 transition">
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-foreground">
-                        {slip.employee_name}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground font-mono">
-                        {slip.employee_code}
-                      </p>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-medium text-foreground">
-                        {slip.department_name}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {slip.job_title}
-                      </p>
-                    </td>
-                    <td className="py-3 px-4 font-mono font-medium">
-                      {formatIDR(slip.basic_salary)}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-emerald-500">
-                      +{formatIDR(slip.total_allowances)}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-destructive">
-                      -{formatIDR(slip.total_deductions)}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-foreground text-sm">
-                      {formatIDR(slip.net_salary)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge
-                        variant="primary"
-                        className="text-[10px] capitalize"
-                      >
-                        {slip.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedPayslip(slip)}
-                        className="h-7 px-2.5 text-xs text-foreground cursor-pointer"
-                      >
-                        <FileText className="h-3 w-3 mr-1 text-primary" />
-                        <span>Lihat Slip</span>
-                      </Button>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
+                <tr>
+                  <th className="py-3.5 px-4">Karyawan</th>
+                  <th className="py-3.5 px-4">Departemen &amp; Jabatan</th>
+                  <th className="py-3.5 px-4">Gaji Pokok</th>
+                  <th className="py-3.5 px-4">Lembur &amp; Tunjangan</th>
+                  <th className="py-3.5 px-4">Potongan</th>
+                  <th className="py-3.5 px-4">Gaji Bersih</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Rincian</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {(payslips || []).length > 0 ? (
+                  (payslips || []).map((slip) => (
+                    <tr key={slip.id} className="hover:bg-muted/30 transition">
+                      <td className="py-3 px-4">
+                        <p className="font-semibold text-foreground">
+                          {slip.employee_name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-mono">
+                          {slip.employee_code}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4">
+                        <p className="font-medium text-foreground">
+                          {slip.department_name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {slip.job_title}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4 font-mono font-medium">
+                        {formatIDR(slip.basic_salary)}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-emerald-500">
+                        +{formatIDR(slip.total_allowances)}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-destructive">
+                        -{formatIDR(slip.total_deductions)}
+                      </td>
+                      <td className="py-3 px-4 font-mono font-bold text-foreground text-sm">
+                        {formatIDR(slip.net_salary)}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          variant="primary"
+                          className="text-[10px] capitalize"
+                        >
+                          {slip.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedPayslip(slip)}
+                          className="h-7 px-2.5 text-xs text-foreground cursor-pointer"
+                        >
+                          <FileText className="h-3 w-3 mr-1 text-primary" />
+                          <span>Lihat Slip</span>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-8 text-center text-xs text-muted-foreground"
+                    >
+                      Belum ada data slip gaji untuk periode ini. Tekan
+                      &quot;Hitung &amp; Generate Payroll&quot; untuk memproses.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-8 text-center text-xs text-muted-foreground"
-                  >
-                    Belum ada data slip gaji untuk periode ini. Tekan
-                    &quot;Hitung &amp; Generate Payroll&quot; untuk memproses.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tab: Salary Advances Table */}
+      {payrollTab === "advances" && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-card-foreground">
+                Buku Pengajuan Kasbon &amp; Pinjaman Karyawan
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Otorisasi pinjaman darurat dan skema pemotongan otomatis per
+                siklus gaji
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
+                <tr>
+                  <th className="py-3.5 px-4">Karyawan</th>
+                  <th className="py-3.5 px-4">Tanggal Pengajuan</th>
+                  <th className="py-3.5 px-4">Total Pinjaman</th>
+                  <th className="py-3.5 px-4">Skema Tenor</th>
+                  <th className="py-3.5 px-4">Potongan per Bulan</th>
+                  <th className="py-3.5 px-4">Alasan Darurat</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {advances.map((adv) => (
+                  <tr key={adv.id} className="hover:bg-muted/20 transition">
+                    <td className="py-3.5 px-4 font-semibold text-foreground">
+                      {adv.employee_name}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-muted-foreground">
+                      {adv.request_date}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-foreground">
+                      {formatIDR(adv.amount)}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge variant="outline" className="text-[10px]">
+                        {adv.installments}x Pemotongan Gaji
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-semibold text-rose-500">
+                      -{formatIDR(adv.monthly_deduction)} / bln
+                    </td>
+                    <td className="py-3.5 px-4 text-muted-foreground max-w-xs truncate">
+                      {adv.reason}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge
+                        variant={
+                          adv.status === "approved"
+                            ? "primary"
+                            : adv.status === "repaid"
+                              ? "outline"
+                              : "secondary"
+                        }
+                        className="text-[10px]"
+                      >
+                        {adv.status === "approved"
+                          ? "Disetujui"
+                          : adv.status === "repaid"
+                            ? "Lunas / Selesai"
+                            : "Menunggu Approval"}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      {adv.status === "pending" && isAdminOrHR ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => handleApproveAdvance(adv.id)}
+                            className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            <span>Setujui</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRejectAdvance(adv.id)}
+                            className="h-7 px-2 text-xs cursor-pointer text-destructive border-destructive/30 hover:bg-destructive/10"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            <span>Tolak</span>
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          -
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Manual Salary Input Modal */}
       <Modal open={isSalaryModalOpen} onOpenChange={setIsSalaryModalOpen}>
@@ -804,6 +1075,147 @@ export function PayrollView() {
         variant="primary"
         onConfirm={handleGeneratePayroll}
       />
+
+      {/* Modal Ajukan Kasbon / Pinjaman Karyawan */}
+      <Modal open={isAdvanceModalOpen} onOpenChange={setIsAdvanceModalOpen}>
+        <ModalContent className="max-w-md p-6">
+          <ModalHeader>
+            <ModalTitle>Pengajuan Kasbon Darurat</ModalTitle>
+            <ModalDescription>
+              Fasilitas pinjaman uang muka gaji karyawan dengan skema pemotongan
+              otomatis.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form
+            onSubmit={handleCreateAdvance}
+            className="space-y-4 pt-2 text-xs"
+          >
+            {isAdminOrHR && (
+              <div className="space-y-1.5">
+                <label className="font-medium text-foreground">
+                  Pilih Karyawan *
+                </label>
+                <select
+                  required
+                  value={advanceForm.employee_id}
+                  onChange={(e) =>
+                    setAdvanceForm({
+                      ...advanceForm,
+                      employee_id: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">-- Pilih Anggota Tim --</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name} ({emp.employee_code || "EMP"}) &bull;{" "}
+                      {emp.department_name || "General"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="font-medium text-foreground">
+                  Nominal Pinjaman (IDR) *
+                </label>
+                <Input
+                  type="number"
+                  required
+                  min={500000}
+                  max={10000000}
+                  step={500000}
+                  value={advanceForm.amount}
+                  onChange={(e) =>
+                    setAdvanceForm({
+                      ...advanceForm,
+                      amount: Number(e.target.value),
+                    })
+                  }
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-medium text-foreground">
+                  Tenor Pemotongan
+                </label>
+                <select
+                  value={advanceForm.installments}
+                  onChange={(e) =>
+                    setAdvanceForm({
+                      ...advanceForm,
+                      installments: Number(e.target.value),
+                    })
+                  }
+                  className="w-full rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value={1}>1x Pelunasan (Gaji Bulan Ini)</option>
+                  <option value={2}>2x Cicilan Bulanan</option>
+                  <option value={3}>3x Cicilan Bulanan</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl border border-border bg-muted/20 space-y-1 text-[11px]">
+              <span className="text-muted-foreground block">
+                Estimasi cicilan per bulan:
+              </span>
+              <p className="font-bold text-rose-500 font-mono text-sm">
+                -
+                {formatIDR(
+                  Math.round(
+                    advanceForm.amount / (advanceForm.installments || 1),
+                  ),
+                )}{" "}
+                / bulan
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="font-medium text-foreground">
+                Alasan Kebutuhan Darurat *
+              </label>
+              <Input
+                required
+                value={advanceForm.reason}
+                onChange={(e) =>
+                  setAdvanceForm({
+                    ...advanceForm,
+                    reason: e.target.value,
+                  })
+                }
+                placeholder="Contoh: Kebutuhan medis mendesak keluarga"
+                className="text-xs"
+              />
+            </div>
+
+            <ModalFooter className="p-0 pt-4 border-t border-border flex flex-row gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAdvanceModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="text-xs cursor-pointer"
+              >
+                Kirim Pengajuan Kasbon
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

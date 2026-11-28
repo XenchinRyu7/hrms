@@ -23,6 +23,10 @@ import {
   CheckCircle2,
   Laptop,
   Plus,
+  Printer,
+  CheckSquare,
+  ListChecks,
+  FileCheck,
 } from "lucide-react";
 import {
   Avatar,
@@ -47,6 +51,67 @@ import { api } from "../../lib/api";
 import type { User, Department, JobTitle } from "../../lib/types";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
+import { printEmploymentLetter } from "../../lib/export";
+
+export interface ChecklistTask {
+  id: string;
+  title: string;
+  type: "onboarding" | "offboarding";
+  completed: boolean;
+}
+
+const DEFAULT_TASKS: ChecklistTask[] = [
+  // Onboarding
+  {
+    id: "ob-1",
+    title: "Setup Akun Email & SSO Kantor",
+    type: "onboarding",
+    completed: true,
+  },
+  {
+    id: "ob-2",
+    title: "Serah Terima Laptop & Kartu Akses Gedung",
+    type: "onboarding",
+    completed: true,
+  },
+  {
+    id: "ob-3",
+    title: "Tanda Tangan Perjanjian Kerja (PKWT/PKWTT) & NDA",
+    type: "onboarding",
+    completed: true,
+  },
+  {
+    id: "ob-4",
+    title: "Sesi Orientasi Budaya Kerja & Pengenalan Tim",
+    type: "onboarding",
+    completed: true,
+  },
+  // Offboarding
+  {
+    id: "of-1",
+    title: "Pengembalian Perangkat Laptop & Inventaris GA",
+    type: "offboarding",
+    completed: false,
+  },
+  {
+    id: "of-2",
+    title: "Handover Repositori Kode, Akses & Dokumen Kerja",
+    type: "offboarding",
+    completed: false,
+  },
+  {
+    id: "of-3",
+    title: "Wawancara Akhir Masa Kerja (Exit Interview HR)",
+    type: "offboarding",
+    completed: false,
+  },
+  {
+    id: "of-4",
+    title: "Pencabutan Akses SSO, VPN & Penonaktifan Email",
+    type: "offboarding",
+    completed: false,
+  },
+];
 
 export interface AssetAssignment {
   id: string;
@@ -174,6 +239,33 @@ export function EmployeesView() {
       "Serah Terima Aset Berhasil",
       `Aset ${added.name} tercatat atas nama ${selectedEmployee?.full_name || "karyawan"}.`,
     );
+  };
+
+  // Onboarding & Offboarding Checklist State
+  const [checklistTasks, setChecklistTasks] =
+    useState<ChecklistTask[]>(DEFAULT_TASKS);
+  const [checklistTab, setChecklistTab] = useState<
+    "onboarding" | "offboarding"
+  >("onboarding");
+
+  const handleToggleTask = (taskId: string) => {
+    setChecklistTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId ? { ...t, completed: !t.completed } : t,
+      ),
+    );
+  };
+
+  const handlePrintLetter = (letterType: "active" | "paklaring") => {
+    if (!selectedEmployee) return;
+    printEmploymentLetter({
+      employeeName: selectedEmployee.full_name,
+      employeeCode: selectedEmployee.employee_code || "EMP-001",
+      jobTitle: selectedEmployee.job_title || "Staf Profesional",
+      department: selectedEmployee.department_name || "Divisi Operasional",
+      hireDate: selectedEmployee.hire_date || "15 Januari 2024",
+      letterType,
+    });
   };
 
   const fetchEmployees = async () => {
@@ -872,6 +964,124 @@ export function EmployeesView() {
                     <Plus className="h-3.5 w-3.5" />
                     <span>Serah Terima Aset Baru</span>
                   </Button>
+                </div>
+
+                {/* Onboarding & Offboarding Checklist */}
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <ListChecks className="h-3.5 w-3.5 text-primary" />
+                      <span>Checklist Onboarding &amp; Exit Clearance</span>
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-mono">
+                      {
+                        checklistTasks.filter(
+                          (t) => t.type === checklistTab && t.completed,
+                        ).length
+                      }
+                      /
+                      {
+                        checklistTasks.filter((t) => t.type === checklistTab)
+                          .length
+                      }{" "}
+                      Selesai
+                    </Badge>
+                  </div>
+
+                  {/* Switcher Tab */}
+                  <div className="flex rounded-lg border border-border bg-card p-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setChecklistTab("onboarding")}
+                      className={`flex-1 py-1 rounded-md text-[11px] font-medium transition cursor-pointer ${
+                        checklistTab === "onboarding"
+                          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Onboarding (Masuk)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChecklistTab("offboarding")}
+                      className={`flex-1 py-1 rounded-md text-[11px] font-medium transition cursor-pointer ${
+                        checklistTab === "offboarding"
+                          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Offboarding (Exit)
+                    </button>
+                  </div>
+
+                  {/* Task List */}
+                  <div className="space-y-1.5 pt-1">
+                    {checklistTasks
+                      .filter((task) => task.type === checklistTab)
+                      .map((task) => (
+                        <label
+                          key={task.id}
+                          className="flex items-start gap-2.5 p-2 rounded-lg border border-border bg-card hover:bg-muted/30 transition cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={task.completed}
+                            onChange={() => handleToggleTask(task.id)}
+                            className="mt-0.5 rounded border-border text-primary focus:ring-primary"
+                          />
+                          <span
+                            className={`text-xs ${
+                              task.completed
+                                ? "line-through text-muted-foreground opacity-75"
+                                : "text-foreground font-medium"
+                            }`}
+                          >
+                            {task.title}
+                          </span>
+                        </label>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Employment Letter & Certificate Generator */}
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <FileCheck className="h-3.5 w-3.5 text-primary" />
+                      <span>Cetak Surat Keterangan Resmi</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Format Kop Surat A4
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    Terbitkan surat keterangan resmi ber-kop surat perusahaan
+                    untuk keperluan administrasi bank, visa, atau akhir masa
+                    kontrak.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePrintLetter("active")}
+                      className="text-[11px] flex items-center justify-center gap-1.5 cursor-pointer h-8"
+                    >
+                      <Printer className="h-3.5 w-3.5 text-primary" />
+                      <span>Surat Kerja Aktif</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePrintLetter("paklaring")}
+                      className="text-[11px] flex items-center justify-center gap-1.5 cursor-pointer h-8"
+                    >
+                      <Printer className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>Surat Paklaring</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
 

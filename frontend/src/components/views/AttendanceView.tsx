@@ -19,6 +19,9 @@ import {
   Check,
   X,
   FileCheck,
+  CalendarRange,
+  CalendarDays,
+  Edit3,
 } from "lucide-react";
 import {
   Button,
@@ -81,6 +84,90 @@ const INITIAL_OVERTIME: OvertimeRequestItem[] = [
   },
 ];
 
+export interface ShiftRosterItem {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  department: string;
+  role: string;
+  shifts: {
+    senin: string;
+    selasa: string;
+    rabu: string;
+    kamis: string;
+    jumat: string;
+    sabtu: string;
+    minggu: string;
+  };
+}
+
+const INITIAL_ROSTERS: ShiftRosterItem[] = [
+  {
+    id: "ros-1",
+    employee_id: "emp-01",
+    employee_name: "Alex Thorne",
+    department: "Software Engineering",
+    role: "Lead Engineer",
+    shifts: {
+      senin: "Regular (09-18)",
+      selasa: "Regular (09-18)",
+      rabu: "Regular (09-18)",
+      kamis: "Regular (09-18)",
+      jumat: "Regular (09-18)",
+      sabtu: "OFF",
+      minggu: "OFF",
+    },
+  },
+  {
+    id: "ros-2",
+    employee_id: "emp-02",
+    employee_name: "Sarah Jenkins",
+    department: "Finance & Payroll",
+    role: "Payroll Specialist",
+    shifts: {
+      senin: "Regular (09-18)",
+      selasa: "Regular (09-18)",
+      rabu: "Regular (09-18)",
+      kamis: "Regular (09-18)",
+      jumat: "Regular (09-18)",
+      sabtu: "OFF",
+      minggu: "OFF",
+    },
+  },
+  {
+    id: "ros-3",
+    employee_id: "emp-03",
+    employee_name: "Dian Prasetyo",
+    department: "Customer Operations",
+    role: "Support Specialist",
+    shifts: {
+      senin: "Pagi (07-15)",
+      selasa: "Pagi (07-15)",
+      rabu: "Pagi (07-15)",
+      kamis: "Siang (15-23)",
+      jumat: "Siang (15-23)",
+      sabtu: "OFF",
+      minggu: "OFF",
+    },
+  },
+  {
+    id: "ros-4",
+    employee_id: "emp-04",
+    employee_name: "Budi Santoso",
+    department: "IT Infrastructure",
+    role: "Systems Support 24/7",
+    shifts: {
+      senin: "Siang (15-23)",
+      selasa: "Siang (15-23)",
+      rabu: "Malam (23-07)",
+      kamis: "Malam (23-07)",
+      jumat: "OFF",
+      sabtu: "OFF",
+      minggu: "Pagi (07-15)",
+    },
+  },
+];
+
 export function AttendanceView() {
   const { user } = useAuth();
   const { toast } = useNotification();
@@ -97,8 +184,10 @@ export function AttendanceView() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // Overtime Management State
-  const [activeTab, setActiveTab] = useState<"history" | "overtime">("history");
+  // Tab & Overtime State
+  const [activeTab, setActiveTab] = useState<"history" | "overtime" | "roster">(
+    "history",
+  );
   const [overtimeList, setOvertimeList] =
     useState<OvertimeRequestItem[]>(INITIAL_OVERTIME);
   const [isOvertimeModalOpen, setIsOvertimeModalOpen] = useState(false);
@@ -109,6 +198,13 @@ export function AttendanceView() {
     duration_hours: 3,
     task_reason: "",
   });
+
+  // Shift Roster State
+  const [rosterList, setRosterList] =
+    useState<ShiftRosterItem[]>(INITIAL_ROSTERS);
+  const [editingRoster, setEditingRoster] = useState<ShiftRosterItem | null>(
+    null,
+  );
 
   // Digital clock timer
   useEffect(() => {
@@ -654,6 +750,19 @@ export function AttendanceView() {
             </Badge>
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("roster")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            activeTab === "roster"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <CalendarRange className="h-3.5 w-3.5" />
+          <span>Jadwal Shift Kerja (Roster)</span>
+        </button>
       </div>
 
       {/* Tab: Attendance History Table */}
@@ -879,9 +988,9 @@ export function AttendanceView() {
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
+                            variant="outline"
                             onClick={() => handleRejectOvertime(item.id)}
-                            className="h-7 px-2 text-xs cursor-pointer"
+                            className="h-7 px-2 text-xs cursor-pointer text-destructive border-destructive/30 hover:bg-destructive/10"
                           >
                             <X className="h-3 w-3 mr-1" />
                             <span>Reject</span>
@@ -892,6 +1001,115 @@ export function AttendanceView() {
                           {item.created_at}
                         </span>
                       )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Shift Roster Scheduling */}
+      {activeTab === "roster" && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-card-foreground">
+                Jadwal Shift &amp; Matriks Roster Mingguan
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Pengaturan pola shift tim operasional (Regular 09-18, Pagi
+                07-15, Siang 15-23, Malam 23-07)
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                Periode: 24 - 30 Nov 2026
+              </Badge>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
+                <tr>
+                  <th className="py-3.5 px-4">Karyawan</th>
+                  <th className="py-3.5 px-3 text-center">Senin</th>
+                  <th className="py-3.5 px-3 text-center">Selasa</th>
+                  <th className="py-3.5 px-3 text-center">Rabu</th>
+                  <th className="py-3.5 px-3 text-center">Kamis</th>
+                  <th className="py-3.5 px-3 text-center">Jumat</th>
+                  <th className="py-3.5 px-3 text-center text-rose-500">
+                    Sabtu
+                  </th>
+                  <th className="py-3.5 px-3 text-center text-rose-500">
+                    Minggu
+                  </th>
+                  <th className="py-3.5 px-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rosterList.map((roster) => (
+                  <tr key={roster.id} className="hover:bg-muted/20 transition">
+                    <td className="py-3.5 px-4">
+                      <p className="font-semibold text-foreground">
+                        {roster.employee_name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {roster.department} &bull; {roster.role}
+                      </p>
+                    </td>
+
+                    {(
+                      [
+                        "senin",
+                        "selasa",
+                        "rabu",
+                        "kamis",
+                        "jumat",
+                        "sabtu",
+                        "minggu",
+                      ] as const
+                    ).map((day) => {
+                      const shift = roster.shifts[day];
+                      return (
+                        <td key={day} className="py-3 px-2 text-center">
+                          {shift === "OFF" ? (
+                            <span className="text-[10px] text-muted-foreground font-mono">
+                              OFF
+                            </span>
+                          ) : (
+                            <Badge
+                              variant={
+                                shift.includes("Pagi")
+                                  ? "primary"
+                                  : shift.includes("Siang")
+                                    ? "amber"
+                                    : shift.includes("Malam")
+                                      ? "rose"
+                                      : "outline"
+                              }
+                              className="text-[9px] px-1.5 py-0.5"
+                            >
+                              {shift}
+                            </Badge>
+                          )}
+                        </td>
+                      );
+                    })}
+
+                    <td className="py-3.5 px-4 text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingRoster(roster)}
+                        className="h-7 px-2 text-[11px] flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                        <span>Atur Shift</span>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -1039,6 +1257,108 @@ export function AttendanceView() {
               </Button>
             </ModalFooter>
           </form>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal Atur Shift Karyawan */}
+      <Modal
+        open={!!editingRoster}
+        onOpenChange={(open) => !open && setEditingRoster(null)}
+      >
+        <ModalContent className="max-w-md p-6">
+          <ModalHeader>
+            <ModalTitle>Atur Pola Shift Kerja</ModalTitle>
+            <ModalDescription>
+              Ubah jadwal shift mingguan untuk {editingRoster?.employee_name} (
+              {editingRoster?.department}).
+            </ModalDescription>
+          </ModalHeader>
+
+          {editingRoster && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setRosterList((prev) =>
+                  prev.map((r) =>
+                    r.id === editingRoster.id ? editingRoster : r,
+                  ),
+                );
+                toast.success(
+                  "Shift Diperbarui",
+                  `Pola shift ${editingRoster.employee_name} berhasil disimpan.`,
+                );
+                setEditingRoster(null);
+              }}
+              className="space-y-3 pt-2 text-xs"
+            >
+              <div className="grid grid-cols-2 gap-2.5">
+                {(
+                  [
+                    "senin",
+                    "selasa",
+                    "rabu",
+                    "kamis",
+                    "jumat",
+                    "sabtu",
+                    "minggu",
+                  ] as const
+                ).map((day) => (
+                  <div key={day} className="space-y-1">
+                    <label className="text-[11px] font-semibold text-foreground capitalize">
+                      {day}
+                    </label>
+                    <select
+                      value={editingRoster.shifts[day]}
+                      onChange={(e) =>
+                        setEditingRoster({
+                          ...editingRoster,
+                          shifts: {
+                            ...editingRoster.shifts,
+                            [day]: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full text-xs rounded-lg border border-border bg-muted/40 p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="Regular (09-18)">
+                        Regular (09:00 - 18:00)
+                      </option>
+                      <option value="Pagi (07-15)">
+                        Shift Pagi (07:00 - 15:00)
+                      </option>
+                      <option value="Siang (15-23)">
+                        Shift Siang (15:00 - 23:00)
+                      </option>
+                      <option value="Malam (23-07)">
+                        Shift Malam (23:00 - 07:00)
+                      </option>
+                      <option value="OFF">Libur / OFF</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+
+              <ModalFooter className="p-0 pt-4 border-t border-border flex flex-row gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingRoster(null)}
+                  className="text-xs cursor-pointer"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  className="text-xs cursor-pointer"
+                >
+                  Simpan Jadwal Shift
+                </Button>
+              </ModalFooter>
+            </form>
+          )}
         </ModalContent>
       </Modal>
     </div>

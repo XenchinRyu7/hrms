@@ -334,3 +334,195 @@ export function printPayslip(data: PayslipPrintData) {
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+export interface EmploymentLetterData {
+  employeeName: string;
+  employeeCode: string;
+  jobTitle: string;
+  department: string;
+  hireDate: string;
+  letterType: "active" | "paklaring";
+  purpose?: string;
+}
+
+export function printEmploymentLetter(data: EmploymentLetterData) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("Popup diblokir oleh browser. Izinkan popup untuk mencetak surat.");
+    return;
+  }
+
+  const currentDate = new Date().toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const isPaklaring = data.letterType === "paklaring";
+  const docTitle = isPaklaring
+    ? "SURAT PENGALAMAN KERJA (PAKLARING)"
+    : "SURAT KETERANGAN KERJA AKTIF";
+  const docRef = isPaklaring
+    ? `No. 082/HRD-PKL/EHMRS/XI/${new Date().getFullYear()}`
+    : `No. 145/HRD-SKK/EHMRS/XI/${new Date().getFullYear()}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${docTitle} - ${data.employeeName}</title>
+  <style>
+    @page { size: A4 portrait; margin: 20mm; }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      color: #111827;
+      margin: 0;
+      padding: 30px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .letterhead {
+      text-align: center;
+      border-bottom: 3px double #1f2937;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .letterhead h1 {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 4px 0;
+      letter-spacing: 1px;
+      color: #0f172a;
+    }
+    .letterhead p {
+      margin: 2px 0;
+      font-size: 11px;
+      color: #4b5563;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .letter-title {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .letter-title h2 {
+      margin: 0;
+      font-size: 16px;
+      text-decoration: underline;
+      letter-spacing: 0.5px;
+    }
+    .letter-title p {
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #4b5563;
+    }
+    .content-body {
+      text-align: justify;
+      margin-bottom: 20px;
+    }
+    .bio-table {
+      margin: 16px 0 20px 24px;
+      border-collapse: collapse;
+    }
+    .bio-table td {
+      padding: 3px 8px;
+      vertical-align: top;
+    }
+    .signatures {
+      margin-top: 40px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .sign-box {
+      text-align: center;
+      width: 240px;
+    }
+    .sign-space {
+      height: 75px;
+    }
+    .sign-name {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="letterhead">
+    <h1>PT ETHEREAL HUMAN RESOURCE</h1>
+    <p>Menara Prima Lt. 18, Kawasan Mega Kuningan, Jakarta Selatan 12950</p>
+    <p>Telp: (021) 5892-1000 &bull; Email: hr-operations@ethereal-hrms.co.id &bull; www.ethereal-hrms.co.id</p>
+  </div>
+
+  <div class="letter-title">
+    <h2>${docTitle}</h2>
+    <p>${docRef}</p>
+  </div>
+
+  <div class="content-body">
+    <p>Yang bertanda tangan di bawah ini menerangkan dengan sebenarnya bahwa:</p>
+
+    <table class="bio-table">
+      <tr>
+        <td style="width: 140px;">Nama Lengkap</td>
+        <td style="width: 10px;">:</td>
+        <td><strong>${data.employeeName}</strong></td>
+      </tr>
+      <tr>
+        <td>Nomor Induk Karyawan</td>
+        <td>:</td>
+        <td>${data.employeeCode}</td>
+      </tr>
+      <tr>
+        <td>Jabatan</td>
+        <td>:</td>
+        <td>${data.jobTitle}</td>
+      </tr>
+      <tr>
+        <td>Departemen</td>
+        <td>:</td>
+        <td>${data.department}</td>
+      </tr>
+      <tr>
+        <td>Tanggal Mulai Kerja</td>
+        <td>:</td>
+        <td>${data.hireDate || "15 Januari 2024"}</td>
+      </tr>
+    </table>
+
+    ${
+      isPaklaring
+        ? `<p>Adalah benar pernah bekerja di <strong>PT Ethereal Human Resource</strong> terhitung sejak tanggal ${data.hireDate || "15 Januari 2024"} sampai dengan ${currentDate}. Selama masa kerja yang bersangkutan telah menunjukkan dedikasi, integritas, dan kinerja yang sangat baik bagi perusahaan.</p>
+           <p>Perusahaan menyampaikan terima kasih dan apresiasi sebesar-besarnya atas segala kontribusi yang telah diberikan, serta mendoakan kesuksesan dalam karir di masa mendatang.</p>`
+        : `<p>Adalah benar saat ini tercatat sebagai <strong>Karyawan Aktif</strong> di <strong>PT Ethereal Human Resource</strong> sejak tanggal ${data.hireDate || "15 Januari 2024"} sampai dengan saat ini dengan status hubungan kerja yang baik.</p>
+           <p>Surat keterangan ini diterbitkan secara resmi atas permohonan yang bersangkutan untuk keperluan <strong>${data.purpose || "Kelengkapan Administrasi Bank / Pengajuan Fasilitas"}</strong> dan dapat dipergunakan sebagaimana mestinya.</p>`
+    }
+
+    <p>Demikian surat keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sesuai dengan keperluannya.</p>
+  </div>
+
+  <div class="signatures">
+    <div class="sign-box">
+      <p>Jakarta, ${currentDate}</p>
+      <p style="margin-top: -8px;"><strong>PT Ethereal Human Resource</strong></p>
+      <div class="sign-space"></div>
+      <div class="sign-name">Alexander Graham, S.Psi., M.M.</div>
+      <p style="margin: 0; font-size: 12px; color: #4b5563;">Head of People &amp; Culture</p>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 300);
+    };
+  </script>
+</body>
+</html>
+`;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
