@@ -17,6 +17,7 @@ import {
   Save,
   Clock,
   FileText,
+  Laptop,
 } from "lucide-react";
 import { Button, Badge, Input } from "@etherealui/react";
 import { useAuth } from "../../lib/auth-context";
@@ -488,6 +489,91 @@ export function ProfileView() {
             </span>
           </Button>
         </div>
+      </div>
+
+      {/* Company Equipment & Handover Assets Card */}
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Laptop className="h-4 w-4 text-primary" />
+            <div>
+              <h3 className="font-semibold text-sm text-foreground">
+                Aset &amp; Fasilitas Kantor yang Dipegang
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
+                Daftar perangkat inventaris perusahaan yang diserahkan dan
+                menjadi tanggung jawab Anda
+              </p>
+            </div>
+          </div>
+          <Badge
+            variant="outline"
+            className="text-xs font-mono self-start sm:self-auto"
+          >
+            3 Aset Aktif Terdaftar
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-xs text-foreground">
+                MacBook Pro 14" M2 Pro
+              </span>
+              <Badge variant="emerald" className="text-[9px]">
+                Digunakan
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Laptop &amp; Komputer Kerja Utama
+            </p>
+            <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+              <span>S/N: MBP-2024-C02G41</span>
+              <span>15 Jan 2024</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-xs text-foreground">
+                Monitor Dell UltraSharp 27" 4K
+              </span>
+              <Badge variant="emerald" className="text-[9px]">
+                Digunakan
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Eksternal Display Workstation
+            </p>
+            <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+              <span>S/N: DEL-27-0F4K8</span>
+              <span>18 Jan 2024</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-xs text-foreground">
+                Kartu Akses Gedung &amp; Parkir
+              </span>
+              <Badge variant="emerald" className="text-[9px]">
+                Digunakan
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Fasilitas Akses Kantor &amp; Parkir
+            </p>
+            <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+              <span>ID: AC-88219-JKT</span>
+              <span>15 Jan 2024</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-border/70">
+          Setiap kerusakan atau kehilangan perangkat wajib segera dilaporkan ke
+          tim IT Support &amp; General Affairs (GA) melalui tiket perbaikan.
+        </p>
       </div>
     </div>
   );

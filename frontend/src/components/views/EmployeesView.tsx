@@ -21,6 +21,8 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle2,
+  Laptop,
+  Plus,
 } from "lucide-react";
 import {
   Avatar,
@@ -45,6 +47,46 @@ import { api } from "../../lib/api";
 import type { User, Department, JobTitle } from "../../lib/types";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
+
+export interface AssetAssignment {
+  id: string;
+  name: string;
+  category: string;
+  serial_number: string;
+  assigned_date: string;
+  condition: string;
+  status: "active" | "returned";
+}
+
+const DEFAULT_EMPLOYEE_ASSETS: AssetAssignment[] = [
+  {
+    id: "asset-1",
+    name: 'MacBook Pro 14" M2 Pro (16GB/512GB)',
+    category: "Laptop & Komputer",
+    serial_number: "MBP-2024-C02G41",
+    assigned_date: "15 Jan 2024",
+    condition: "Baik",
+    status: "active",
+  },
+  {
+    id: "asset-2",
+    name: 'Monitor Dell UltraSharp 27" 4K',
+    category: "Display & Monitor",
+    serial_number: "DEL-27-0F4K8",
+    assigned_date: "18 Jan 2024",
+    condition: "Baik",
+    status: "active",
+  },
+  {
+    id: "asset-3",
+    name: "Kartu Akses Gedung & Parkir Karyawan",
+    category: "Fasilitas Kantor",
+    serial_number: "AC-88219-JKT",
+    assigned_date: "15 Jan 2024",
+    condition: "Baru",
+    status: "active",
+  },
+];
 
 export function EmployeesView() {
   const { user: currentUser } = useAuth();
@@ -79,6 +121,60 @@ export function EmployeesView() {
     hire_date: new Date().toISOString().split("T")[0],
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Asset Management State
+  const [employeeAssets, setEmployeeAssets] = useState<AssetAssignment[]>(
+    DEFAULT_EMPLOYEE_ASSETS,
+  );
+  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
+  const [newAsset, setNewAsset] = useState({
+    name: "",
+    category: "Laptop & Komputer",
+    serial_number: "",
+    condition: "Baik",
+  });
+
+  const handleReturnAsset = (assetId: string) => {
+    setEmployeeAssets((prev) =>
+      prev.map((a) =>
+        a.id === assetId ? { ...a, status: "returned" as const } : a,
+      ),
+    );
+    toast.success(
+      "Aset Dikembalikan",
+      "Status inventaris telah diperbarui menjadi dikembalikan ke kantor.",
+    );
+  };
+
+  const handleAddAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAsset.name || !newAsset.serial_number) return;
+    const added: AssetAssignment = {
+      id: `asset-${Date.now()}`,
+      name: newAsset.name,
+      category: newAsset.category,
+      serial_number: newAsset.serial_number,
+      assigned_date: new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      condition: newAsset.condition,
+      status: "active",
+    };
+    setEmployeeAssets((prev) => [...prev, added]);
+    setIsAssetModalOpen(false);
+    setNewAsset({
+      name: "",
+      category: "Laptop & Komputer",
+      serial_number: "",
+      condition: "Baik",
+    });
+    toast.success(
+      "Serah Terima Aset Berhasil",
+      `Aset ${added.name} tercatat atas nama ${selectedEmployee?.full_name || "karyawan"}.`,
+    );
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -708,6 +804,75 @@ export function EmployeesView() {
                     <span>Upload Berkas Baru</span>
                   </Button>
                 </div>
+
+                {/* Company Assets & Inventory Handover */}
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <Laptop className="h-3.5 w-3.5 text-primary" />
+                      <span>Aset &amp; Inventaris Kantor</span>
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-mono">
+                      {
+                        employeeAssets.filter((a) => a.status === "active")
+                          .length
+                      }{" "}
+                      Aset Aktif
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2">
+                    {employeeAssets.map((asset) => (
+                      <div
+                        key={asset.id}
+                        className="p-2.5 rounded-lg border border-border bg-card space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold text-foreground truncate">
+                            {asset.name}
+                          </p>
+                          <Badge
+                            variant={
+                              asset.status === "active" ? "emerald" : "outline"
+                            }
+                            className="text-[9px] capitalize"
+                          >
+                            {asset.status === "active"
+                              ? "Digunakan"
+                              : "Dikembalikan"}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                          <span>S/N: {asset.serial_number}</span>
+                          <span>{asset.assigned_date}</span>
+                        </div>
+
+                        {asset.status === "active" && (
+                          <div className="pt-1 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleReturnAsset(asset.id)}
+                              className="text-[10px] text-muted-foreground hover:text-foreground font-medium underline cursor-pointer"
+                            >
+                              Tandai Telah Dikembalikan
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAssetModalOpen(true)}
+                    className="w-full text-xs flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Serah Terima Aset Baru</span>
+                  </Button>
+                </div>
               </div>
 
               <DrawerFooter className="p-0 pt-4 border-t border-border flex flex-row gap-2">
@@ -923,6 +1088,123 @@ export function EmployeesView() {
         onConfirm={confirmDelete}
         onCancel={() => setEmployeeToDelete(null)}
       />
+
+      {/* Handover New Asset Modal */}
+      <Modal open={isAssetModalOpen} onOpenChange={setIsAssetModalOpen}>
+        <ModalContent className="max-w-md p-6">
+          <ModalHeader>
+            <ModalTitle>Serah Terima Aset Kantor</ModalTitle>
+            <ModalDescription>
+              Catat perangkat atau fasilitas inventaris kantor yang diserahkan
+              ke {selectedEmployee?.full_name}.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form onSubmit={handleAddAsset} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">
+                Nama Barang / Perangkat *
+              </label>
+              <Input
+                required
+                value={newAsset.name}
+                onChange={(e) =>
+                  setNewAsset((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Contoh: ThinkPad X1 Carbon Gen 11"
+                className="w-full text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  Kategori
+                </label>
+                <select
+                  value={newAsset.category}
+                  onChange={(e) =>
+                    setNewAsset((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="Laptop & Komputer">
+                    Laptop &amp; Komputer
+                  </option>
+                  <option value="Display & Monitor">
+                    Display &amp; Monitor
+                  </option>
+                  <option value="Fasilitas Kantor">
+                    Fasilitas / Kartu Akses
+                  </option>
+                  <option value="Kendaraan Dinas">Kendaraan Dinas</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  Kondisi
+                </label>
+                <select
+                  value={newAsset.condition}
+                  onChange={(e) =>
+                    setNewAsset((prev) => ({
+                      ...prev,
+                      condition: e.target.value,
+                    }))
+                  }
+                  className="w-full text-xs rounded-xl border border-border bg-muted/40 p-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="Baru">Baru (New)</option>
+                  <option value="Baik">Baik (Good)</option>
+                  <option value="Perlu Servis">Perlu Servis</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">
+                Nomor Seri / Serial Number (S/N) *
+              </label>
+              <Input
+                required
+                value={newAsset.serial_number}
+                onChange={(e) =>
+                  setNewAsset((prev) => ({
+                    ...prev,
+                    serial_number: e.target.value,
+                  }))
+                }
+                placeholder="Contoh: SN-8829-TP11"
+                className="w-full text-xs font-mono"
+              />
+            </div>
+
+            <ModalFooter className="p-0 pt-4 border-t border-border flex flex-row gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAssetModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="text-xs cursor-pointer"
+              >
+                Simpan Serah Terima
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
