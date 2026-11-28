@@ -260,29 +260,39 @@ export function printPayslip(data: PayslipPrintData) {
       <tr>
         <td>Gaji Pokok</td>
         <td class="text-right">${formatIDR(data.basicSalary)}</td>
-        <td>PPh 21 Pajak Penghasilan</td>
+        <td>PPh 21 (TER 2024)</td>
         <td class="text-right text-rose">-${formatIDR(data.taxDeduction)}</td>
       </tr>
       <tr>
-        <td>Uang Lembur</td>
+        <td>Uang Lembur (@Rp 50rb/jam)</td>
         <td class="text-right text-emerald">+${formatIDR(data.overtimePay)}</td>
-        <td>BPJS Ketenagakerjaan & Kesehatan</td>
-        <td class="text-right text-rose">-${formatIDR(data.insuranceDeduction)}</td>
+        <td>BPJS Ketenagakerjaan (JHT 2% + JP 1%)</td>
+        <td class="text-right text-rose">-${formatIDR(Math.round(data.insuranceDeduction * 0.75))}</td>
       </tr>
       <tr>
         <td>Reimbursement Disetujui</td>
         <td class="text-right text-emerald">+${formatIDR(data.reimbursements)}</td>
-        <td>-</td>
-        <td class="text-right">-</td>
+        <td>BPJS Kesehatan (1%)</td>
+        <td class="text-right text-rose">-${formatIDR(Math.round(data.insuranceDeduction * 0.25))}</td>
       </tr>
       <tr style="font-weight: 700; background: #fafafa;">
         <td>Total Penerimaan Kotor</td>
         <td class="text-right text-emerald">${formatIDR(data.basicSalary + data.totalAllowances)}</td>
-        <td>Total Potongan</td>
+        <td>Total Potongan Statutori</td>
         <td class="text-right text-rose">-${formatIDR(data.totalDeductions)}</td>
       </tr>
     </tbody>
   </table>
+
+  <div style="background: #f4f4f5; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <strong style="color: #27272a;">Iuran Ditanggung Perusahaan:</strong>
+      <span style="color: #71717a; margin-left: 6px;">BPJS Ketenagakerjaan (6,24%) &amp; BPJS Kesehatan (4%)</span>
+    </div>
+    <div style="font-family: ui-monospace, monospace; font-weight: 600; color: #059669;">
+      +${formatIDR(Math.round(data.basicSalary * 0.1024))} / bln
+    </div>
+  </div>
 
   <div class="total-box">
     <div>

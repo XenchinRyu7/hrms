@@ -11,6 +11,9 @@ import {
   Tag,
   ShieldCheck,
   ShieldAlert,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Button,
@@ -217,19 +220,69 @@ export function ExpensesView() {
         </div>
       </div>
 
-      {/* Separation of Duties (SoD) Policy Alert Banner */}
-      <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card/60 text-xs shadow-sm">
-        <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-        <div className="flex-1">
-          <span className="font-semibold text-foreground">
-            Separation of Duties (SoD) & Governance:
-          </span>{" "}
-          <span className="text-muted-foreground">
-            Persetujuan reimbursement dan pembayaran klaim adalah wewenang
-            eksklusif <strong>HR & Finance</strong>. Team Lead / Manager
-            berwenang memantau dan mengajukan klaim, namun tidak dapat melakukan
-            approval finansial. Tidak ada self-approval.
+      {/* Multi-level Approval Flow & Governance */}
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+            <span className="font-semibold text-xs text-foreground">
+              Alur Persetujuan Bertingkat (Multi-level Approval)
+            </span>
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            Pencairan otomatis terhubung ke perhitungan slip gaji bulan berjalan
           </span>
+        </div>
+
+        {/* Stepper visual */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1 text-xs">
+          <div className="p-2.5 rounded-xl border border-border/80 bg-background/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-primary font-medium text-[11px]">
+              <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                1
+              </span>
+              <span>Diajukan Karyawan</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Form klaim + bukti kuitansi diunggah
+            </p>
+          </div>
+
+          <div className="p-2.5 rounded-xl border border-border/80 bg-background/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-primary font-medium text-[11px]">
+              <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                2
+              </span>
+              <span>Verifikasi Team Lead</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Validasi kesesuaian tugas & dinas kerja
+            </p>
+          </div>
+
+          <div className="p-2.5 rounded-xl border border-border/80 bg-background/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-primary font-medium text-[11px]">
+              <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                3
+              </span>
+              <span>Persetujuan HR & Keuangan</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Otorisasi nominal dan ketersediaan anggaran
+            </p>
+          </div>
+
+          <div className="p-2.5 rounded-xl border border-border/80 bg-background/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-emerald-500 font-medium text-[11px]">
+              <span className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-[10px] font-bold">
+                4
+              </span>
+              <span>Pencairan di Slip Gaji</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Masuk otomatis ke tunjangan payroll
+            </p>
+          </div>
         </div>
       </div>
 
@@ -267,9 +320,9 @@ export function ExpensesView() {
                 <th className="py-3.5 px-4">Expense Title</th>
                 <th className="py-3.5 px-4">Category</th>
                 <th className="py-3.5 px-4">Date</th>
-                <th className="py-3.5 px-4">Amount</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Review Action</th>
+                <th className="py-3.5 px-4">Jumlah Klaim</th>
+                <th className="py-3.5 px-4">Tahapan Approval</th>
+                <th className="py-3.5 px-4 text-right">Aksi Review</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -297,18 +350,56 @@ export function ExpensesView() {
                       {formatIDR(exp.amount)}
                     </td>
                     <td className="py-3 px-4">
-                      <Badge
-                        variant={
-                          exp.status === "approved"
-                            ? "primary"
-                            : exp.status === "rejected"
-                              ? "outline"
-                              : "default"
-                        }
-                        className={`text-[10px] capitalize ${exp.status === "rejected" ? "text-destructive border-destructive/30" : ""}`}
-                      >
-                        {exp.status}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge
+                          variant={
+                            exp.status === "approved" ||
+                            exp.status === "reimbursed"
+                              ? "primary"
+                              : exp.status === "rejected"
+                                ? "outline"
+                                : "default"
+                          }
+                          className={`text-[10px] ${
+                            exp.status === "rejected"
+                              ? "text-destructive border-destructive/30"
+                              : exp.status === "approved"
+                                ? "text-emerald-500 border-emerald-500/30"
+                                : ""
+                          }`}
+                        >
+                          {exp.status === "approved"
+                            ? "Disetujui HR & Keuangan"
+                            : exp.status === "reimbursed"
+                              ? "Telah Dicairkan"
+                              : exp.status === "rejected"
+                                ? "Ditolak"
+                                : "Menunggu Approval HR"}
+                        </Badge>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                          {exp.status === "approved" && (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500 inline" />
+                              <span>Tahap 3 Selesai (Siap Masuk Gaji)</span>
+                            </>
+                          )}
+                          {exp.status === "pending" && (
+                            <>
+                              <Clock className="h-3 w-3 text-amber-500 inline" />
+                              <span>Tahap 3/4 Otorisasi HR</span>
+                            </>
+                          )}
+                          {exp.status === "reimbursed" && (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500 inline" />
+                              <span>Tahap 4 Selesai (Dicairkan)</span>
+                            </>
+                          )}
+                          {exp.status === "rejected" && (
+                            <span>Dibatalkan / Tidak Disetujui</span>
+                          )}
+                        </p>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-right">
                       {exp.status === "pending" ? (

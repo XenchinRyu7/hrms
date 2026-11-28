@@ -657,13 +657,18 @@ export function PayrollView() {
                 {/* Deductions */}
                 <div className="space-y-2 p-3.5 rounded-xl border border-border bg-card">
                   <p className="font-bold text-foreground pb-2 border-b border-border flex items-center justify-between">
-                    <span>Potongan (Deductions)</span>
-                    <span className="text-destructive">Statutori</span>
+                    <span>Potongan Statutori (PPh 21 & BPJS)</span>
+                    <span className="text-destructive">Karyawan</span>
                   </p>
                   <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">
-                      PPh 21 Pajak Penghasilan
-                    </span>
+                    <div>
+                      <span className="text-muted-foreground block">
+                        PPh 21 (TER 2024)
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/75">
+                        Kategori TER Efektif Bulanan
+                      </span>
+                    </div>
                     <span className="font-mono text-destructive">
                       -
                       {formatIDR(
@@ -671,15 +676,44 @@ export function PayrollView() {
                       )}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">
-                      BPJS Ketenagakerjaan &amp; Kesehatan
-                    </span>
+                  <div className="flex justify-between py-1 border-t border-border/50">
+                    <div>
+                      <span className="text-muted-foreground block">
+                        BPJS Ketenagakerjaan
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/75">
+                        JHT 2% + JP 1%
+                      </span>
+                    </div>
                     <span className="font-mono text-destructive">
                       -
                       {formatIDR(
-                        Number(
-                          selectedPayslip.breakdown?.deductions?.insurance || 0,
+                        Math.round(
+                          Number(
+                            selectedPayslip.breakdown?.deductions?.insurance ||
+                              0,
+                          ) * 0.75,
+                        ),
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-t border-border/50">
+                    <div>
+                      <span className="text-muted-foreground block">
+                        BPJS Kesehatan
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/75">
+                        1% Potongan Karyawan
+                      </span>
+                    </div>
+                    <span className="font-mono text-destructive">
+                      -
+                      {formatIDR(
+                        Math.round(
+                          Number(
+                            selectedPayslip.breakdown?.deductions?.insurance ||
+                              0,
+                          ) * 0.25,
                         ),
                       )}
                     </span>
@@ -708,6 +742,28 @@ export function PayrollView() {
                     {formatIDR(selectedPayslip.net_salary)}
                   </span>
                 </div>
+              </div>
+
+              {/* Company Benefit & Contributions */}
+              <div className="p-3 rounded-xl border border-border bg-muted/20 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="font-semibold text-foreground">
+                    Iuran Ditanggung Perusahaan (BPJS TK 6,24% &amp; Kesehatan
+                    4%)
+                  </span>
+                  <p className="text-[11px] text-muted-foreground">
+                    Iuran jaminan sosial yang dibayarkan penuh oleh perusahaan
+                    di luar pemotongan gaji pokok
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="text-emerald-500 border-emerald-500/30 text-[10px] shrink-0 font-mono"
+                >
+                  +
+                  {formatIDR(Math.round(selectedPayslip.basic_salary * 0.1024))}{" "}
+                  / bln
+                </Badge>
               </div>
             </div>
           )}

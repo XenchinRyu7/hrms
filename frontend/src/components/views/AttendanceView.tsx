@@ -14,13 +14,72 @@ import {
   Coffee,
   ShieldCheck,
   Download,
+  Plus,
+  FileText,
+  Check,
+  X,
+  FileCheck,
 } from "lucide-react";
-import { Button, Badge, Input } from "@etherealui/react";
+import {
+  Button,
+  Badge,
+  Input,
+  Textarea,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
 import { exportToCSV } from "../../lib/export";
 import type { Attendance, User } from "../../lib/types";
+
+interface OvertimeRequestItem {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration_hours: number;
+  task_reason: string;
+  status: "pending" | "approved" | "rejected";
+  estimated_pay: number;
+  created_at: string;
+}
+
+const INITIAL_OVERTIME: OvertimeRequestItem[] = [
+  {
+    id: "ot-1",
+    employee_id: "emp-01",
+    employee_name: "Alex Thorne",
+    date: new Date().toISOString().split("T")[0],
+    start_time: "18:00",
+    end_time: "21:00",
+    duration_hours: 3.0,
+    task_reason: "Deploy rilis backend v2 & migrasi database",
+    status: "approved",
+    estimated_pay: 150000,
+    created_at: "Hari ini",
+  },
+  {
+    id: "ot-2",
+    employee_id: "emp-02",
+    employee_name: "Sarah Jenkins",
+    date: new Date().toISOString().split("T")[0],
+    start_time: "18:00",
+    end_time: "20:00",
+    duration_hours: 2.0,
+    task_reason: "Penyelesaian rekap gaji & closing payroll bulanan",
+    status: "pending",
+    estimated_pay: 100000,
+    created_at: "Hari ini",
+  },
+];
 
 export function AttendanceView() {
   const { user } = useAuth();
@@ -37,6 +96,19 @@ export function AttendanceView() {
   const [notes, setNotes] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Overtime Management State
+  const [activeTab, setActiveTab] = useState<"history" | "overtime">("history");
+  const [overtimeList, setOvertimeList] =
+    useState<OvertimeRequestItem[]>(INITIAL_OVERTIME);
+  const [isOvertimeModalOpen, setIsOvertimeModalOpen] = useState(false);
+  const [overtimeForm, setOvertimeForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    start_time: "18:00",
+    end_time: "21:00",
+    duration_hours: 3,
+    task_reason: "",
+  });
 
   // Digital clock timer
   useEffect(() => {
@@ -230,26 +302,97 @@ export function AttendanceView() {
     );
   };
 
+  const handleCreateOvertime = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!overtimeForm.task_reason.trim()) {
+      toast.warning("Alasan Wajib Diisi", "Mohon isi deskripsi tugas lembur.");
+      return;
+    }
+
+    const newOt: OvertimeRequestItem = {
+      id: `ot-${Date.now()}`,
+      employee_id: user?.id || "emp-me",
+      employee_name: user?.full_name || "Karyawan",
+      date: overtimeForm.date,
+      start_time: overtimeForm.start_time,
+      end_time: overtimeForm.end_time,
+      duration_hours: Number(overtimeForm.duration_hours),
+      task_reason: overtimeForm.task_reason,
+      status: "pending",
+      estimated_pay: Number(overtimeForm.duration_hours) * 50000,
+      created_at: "Hari ini",
+    };
+
+    setOvertimeList((prev) => [newOt, ...prev]);
+    setIsOvertimeModalOpen(false);
+    toast.success(
+      "Pengajuan Lembur Terkirim",
+      `Permohonan lembur ${newOt.duration_hours} jam diajukan untuk persetujuan atasan.`,
+    );
+    setOvertimeForm({
+      date: new Date().toISOString().split("T")[0],
+      start_time: "18:00",
+      end_time: "21:00",
+      duration_hours: 3,
+      task_reason: "",
+    });
+  };
+
+  const handleApproveOvertime = (id: string) => {
+    setOvertimeList((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: "approved" as const } : item,
+      ),
+    );
+    toast.success(
+      "Lembur Disetujui",
+      "Pengajuan lembur telah disetujui dan akan terakumulasi ke Payroll.",
+    );
+  };
+
+  const handleRejectOvertime = (id: string) => {
+    setOvertimeList((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: "rejected" as const } : item,
+      ),
+    );
+    toast.info("Lembur Ditolak", "Pengajuan lembur ditolak.");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs uppercase tracking-wider font-semibold text-primary">
-            Time & Attendance
-          </span>
-          <span className="text-muted-foreground">&bull;</span>
-          <span className="text-xs text-muted-foreground">
-            Flexible Hours & Overtime Engine
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs uppercase tracking-wider font-semibold text-primary">
+              Time & Attendance
+            </span>
+            <span className="text-muted-foreground">&bull;</span>
+            <span className="text-xs text-muted-foreground">
+              Flexible Hours & Overtime Management
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Attendance Terminal & Overtime (SPK)
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Jam kerja fleksibel dan manajemen izin lembur (@Rp 50.000 / jam)
+            terintegrasi ke payroll.
+          </p>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Attendance Terminal & Work Shifts
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Jam kerja fleksibel bebas jam masuk. Standar 8 jam kerja + 1 jam
-          istirahat otomatis. Lembur dihitung Rp 50.000 / jam.
-        </p>
+
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOvertimeModalOpen(true)}
+            className="text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-primary/20"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Ajukan Izin Lembur (SPK)</span>
+          </Button>
+        </div>
       </div>
 
       {feedback && (
@@ -476,130 +619,428 @@ export function AttendanceView() {
         </div>
       </div>
 
-      {/* Attendance History Table */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-bold text-card-foreground">
-              Riwayat Kehadiran & Catatan Jam Kerja
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Log waktu clock-in, clock-out, jam istirahat, dan kalkulasi lembur
-            </p>
+      {/* Switcher Tab: Riwayat Presensi vs Pengajuan Lembur */}
+      <div className="flex gap-2 border-b border-border pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("history")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            activeTab === "history"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <Clock className="h-3.5 w-3.5" />
+          <span>Riwayat Presensi Masuk/Pulang</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("overtime")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            activeTab === "overtime"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <FileCheck className="h-3.5 w-3.5" />
+          <span>Persetujuan Lembur (SPK)</span>
+          {overtimeList.filter((o) => o.status === "pending").length > 0 && (
+            <Badge
+              variant="secondary"
+              className="text-[9px] px-1.5 py-0 bg-amber-500/20 text-amber-600"
+            >
+              {overtimeList.filter((o) => o.status === "pending").length}
+            </Badge>
+          )}
+        </button>
+      </div>
+
+      {/* Tab: Attendance History Table */}
+      {activeTab === "history" && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-card-foreground">
+                Riwayat Kehadiran & Catatan Jam Kerja
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Log waktu clock-in, clock-out, jam istirahat, dan kalkulasi
+                lembur
+              </p>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+              title="Download riwayat presensi dalam format CSV"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              <span>Export CSV Presensi</span>
+            </Button>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportCSV}
-            className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
-            title="Download riwayat presensi dalam format CSV"
-          >
-            <Download className="h-3.5 w-3.5 text-primary" />
-            <span>Export CSV Presensi</span>
-          </Button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
-              <tr>
-                <th className="py-3.5 px-4">Tanggal</th>
-                <th className="py-3.5 px-4">Karyawan</th>
-                <th className="py-3.5 px-4">Jam Masuk</th>
-                <th className="py-3.5 px-4">Jam Pulang</th>
-                <th className="py-3.5 px-4">Istirahat</th>
-                <th className="py-3.5 px-4">Kerja Efektif</th>
-                <th className="py-3.5 px-4">Lembur (@50rb)</th>
-                <th className="py-3.5 px-4">Lokasi</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Catatan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {history.length > 0 ? (
-                history.map((att) => {
-                  const effectiveWork =
-                    att.work_hours || Math.max(0, att.total_hours - 1);
-                  const otHours =
-                    att.overtime_hours ||
-                    (effectiveWork > 8 ? effectiveWork - 8 : 0);
-                  const otPay = att.overtime_pay || otHours * 50000;
-                  return (
-                    <tr key={att.id} className="hover:bg-muted/30 transition">
-                      <td className="py-3 px-4 font-mono font-medium text-foreground">
-                        {att.date}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-foreground">
-                        {att.employee_name || user?.full_name}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-muted-foreground">
-                        {att.clock_in
-                          ? new Date(att.clock_in).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-muted-foreground">
-                        {att.clock_out
-                          ? new Date(att.clock_out).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "Sedang Aktif"}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-muted-foreground">
-                        {att.clock_out ? "1.0 jam" : "-"}
-                      </td>
-                      <td className="py-3 px-4 font-mono font-semibold text-foreground">
-                        {att.clock_out
-                          ? `${effectiveWork.toFixed(1)} jam`
-                          : "-"}
-                      </td>
-                      <td className="py-3 px-4 font-mono">
-                        {otHours > 0 ? (
-                          <span className="text-emerald-500 font-bold">
-                            +{otHours.toFixed(1)} jam (Rp{" "}
-                            {otPay.toLocaleString("id-ID")})
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 capitalize">
-                        <span className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="h-3 w-3 text-primary" />
-                          <span>
-                            {att.work_location === "client_site"
-                              ? "Client Site"
-                              : att.work_location}
-                          </span>
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        {getStatusBadge(att.status, otHours)}
-                      </td>
-                      <td className="py-3 px-4 text-muted-foreground truncate max-w-xs">
-                        {att.notes || "-"}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
                 <tr>
-                  <td
-                    colSpan={10}
-                    className="py-8 text-center text-xs text-muted-foreground"
-                  >
-                    Belum ada riwayat kehadiran tercatat.
-                  </td>
+                  <th className="py-3.5 px-4">Tanggal</th>
+                  <th className="py-3.5 px-4">Karyawan</th>
+                  <th className="py-3.5 px-4">Jam Masuk</th>
+                  <th className="py-3.5 px-4">Jam Pulang</th>
+                  <th className="py-3.5 px-4">Istirahat</th>
+                  <th className="py-3.5 px-4">Kerja Efektif</th>
+                  <th className="py-3.5 px-4">Lembur (@50rb)</th>
+                  <th className="py-3.5 px-4">Lokasi</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Catatan</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {history.length > 0 ? (
+                  history.map((att) => {
+                    const effectiveWork =
+                      att.work_hours || Math.max(0, att.total_hours - 1);
+                    const otHours =
+                      att.overtime_hours ||
+                      (effectiveWork > 8 ? effectiveWork - 8 : 0);
+                    const otPay = att.overtime_pay || otHours * 50000;
+                    return (
+                      <tr key={att.id} className="hover:bg-muted/30 transition">
+                        <td className="py-3 px-4 font-mono font-medium text-foreground">
+                          {att.date}
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-foreground">
+                          {att.employee_name || user?.full_name}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-muted-foreground">
+                          {att.clock_in
+                            ? new Date(att.clock_in).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "-"}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-muted-foreground">
+                          {att.clock_out
+                            ? new Date(att.clock_out).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "Sedang Aktif"}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-muted-foreground">
+                          {att.clock_out ? "1.0 jam" : "-"}
+                        </td>
+                        <td className="py-3 px-4 font-mono font-semibold text-foreground">
+                          {att.clock_out
+                            ? `${effectiveWork.toFixed(1)} jam`
+                            : "-"}
+                        </td>
+                        <td className="py-3 px-4 font-mono">
+                          {otHours > 0 ? (
+                            <span className="text-emerald-500 font-bold">
+                              +{otHours.toFixed(1)} jam (Rp{" "}
+                              {otPay.toLocaleString("id-ID")})
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 capitalize">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="h-3 w-3 text-primary" />
+                            <span>
+                              {att.work_location === "client_site"
+                                ? "Client Site"
+                                : att.work_location}
+                            </span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(att.status, otHours)}
+                        </td>
+                        <td className="py-3 px-4 text-muted-foreground truncate max-w-xs">
+                          {att.notes || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={10}
+                      className="py-8 text-center text-xs text-muted-foreground"
+                    >
+                      Belum ada riwayat kehadiran tercatat.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tab: Overtime Requests Table */}
+      {activeTab === "overtime" && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-card-foreground">
+                Persetujuan Surat Perintah Kerja Lembur (SPK)
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Pengajuan izin lembur resmi karyawan untuk perhitungan tunjangan
+                payroll
+              </p>
+            </div>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsOvertimeModalOpen(true)}
+              className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Ajukan Lembur Baru</span>
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 border-b border-border uppercase tracking-wider text-[11px] text-muted-foreground font-semibold">
+                <tr>
+                  <th className="py-3.5 px-4">Karyawan</th>
+                  <th className="py-3.5 px-4">Tanggal</th>
+                  <th className="py-3.5 px-4">Jam Lembur</th>
+                  <th className="py-3.5 px-4">Durasi</th>
+                  <th className="py-3.5 px-4">Estimasi Upah (@50rb)</th>
+                  <th className="py-3.5 px-4">Tugas / Alasan</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {overtimeList.map((item) => (
+                  <tr key={item.id} className="hover:bg-muted/20 transition">
+                    <td className="py-3.5 px-4 font-semibold text-foreground">
+                      {item.employee_name}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-muted-foreground">
+                      {item.date}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-foreground">
+                      {item.start_time} - {item.end_time}
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-foreground">
+                      {item.duration_hours} Jam
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-emerald-500">
+                      Rp {item.estimated_pay.toLocaleString("id-ID")}
+                    </td>
+                    <td className="py-3.5 px-4 text-muted-foreground max-w-xs truncate">
+                      {item.task_reason}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {item.status === "approved" ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-emerald-500 border-emerald-500/30"
+                        >
+                          Disetujui
+                        </Badge>
+                      ) : item.status === "rejected" ? (
+                        <Badge variant="rose" className="text-[10px]">
+                          Ditolak
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] text-amber-500 border-amber-500/30"
+                        >
+                          Menunggu Review
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      {item.status === "pending" && isManagerOrAdmin ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => handleApproveOvertime(item.id)}
+                            className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            <span>Approve</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRejectOvertime(item.id)}
+                            className="h-7 px-2 text-xs cursor-pointer"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            <span>Reject</span>
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          {item.created_at}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ajukan Lembur Baru (SPK) */}
+      <Modal open={isOvertimeModalOpen} onOpenChange={setIsOvertimeModalOpen}>
+        <ModalContent className="max-w-md">
+          <ModalHeader>
+            <ModalTitle>Formulir Pengajuan Lembur (SPK)</ModalTitle>
+            <ModalDescription>
+              Ajukan jam lembur resmi untuk verifikasi atasan dan perhitungan
+              uang lembur di slip gaji.
+            </ModalDescription>
+          </ModalHeader>
+
+          <form onSubmit={handleCreateOvertime} className="space-y-4 pt-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Tanggal Lembur *
+              </label>
+              <Input
+                type="date"
+                required
+                value={overtimeForm.date}
+                onChange={(e) =>
+                  setOvertimeForm({ ...overtimeForm, date: e.target.value })
+                }
+                className="text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Jam Mulai *
+                </label>
+                <Input
+                  type="time"
+                  required
+                  value={overtimeForm.start_time}
+                  onChange={(e) =>
+                    setOvertimeForm({
+                      ...overtimeForm,
+                      start_time: e.target.value,
+                    })
+                  }
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Jam Selesai *
+                </label>
+                <Input
+                  type="time"
+                  required
+                  value={overtimeForm.end_time}
+                  onChange={(e) =>
+                    setOvertimeForm({
+                      ...overtimeForm,
+                      end_time: e.target.value,
+                    })
+                  }
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Estimasi Durasi (Jam) *
+                </label>
+                <Input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  required
+                  value={overtimeForm.duration_hours}
+                  onChange={(e) =>
+                    setOvertimeForm({
+                      ...overtimeForm,
+                      duration_hours: Number(e.target.value),
+                    })
+                  }
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-foreground">
+                  Estimasi Uang Lembur
+                </label>
+                <div className="p-2.5 rounded-xl border border-border bg-muted/30 font-mono font-bold text-xs text-emerald-500">
+                  Rp{" "}
+                  {(overtimeForm.duration_hours * 50000).toLocaleString(
+                    "id-ID",
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                Tugas / Alasan Lembur *
+              </label>
+              <Textarea
+                required
+                rows={3}
+                placeholder="Jelaskan kebutuhan tugas lembur dan deliverable yang dikerjakan..."
+                value={overtimeForm.task_reason}
+                onChange={(e) =>
+                  setOvertimeForm({
+                    ...overtimeForm,
+                    task_reason: e.target.value,
+                  })
+                }
+                className="text-xs"
+              />
+            </div>
+
+            <ModalFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsOvertimeModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="text-xs cursor-pointer shadow-xs"
+              >
+                Kirim Pengajuan Lembur
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
