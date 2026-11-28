@@ -42,14 +42,14 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "notif-1",
-    title: "Clock-In Synchronized",
+    title: "Presensi Berhasil Dicatat",
     description:
-      "Your daily attendance was verified and synced to Supabase PostgreSQL.",
+      "Presensi harian Anda telah berhasil dicatat dan diverifikasi oleh sistem.",
     timestamp: "10m ago",
     type: "success",
     read: false,
     actor: {
-      name: "Postgres Sync",
+      name: "Sistem Presensi",
     },
   },
   {

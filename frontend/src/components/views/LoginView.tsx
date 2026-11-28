@@ -80,7 +80,7 @@ export function LoginView({ onSuccess }: LoginViewProps) {
               <button
                 type="button"
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs cursor-pointer text-foreground transition shadow-sm"
-                title="Ganti Tema Ethereal OKLCH"
+                title="Pilih Tema Tampilan"
               >
                 <Palette className="h-3.5 w-3.5 text-primary" />
                 <span className="hidden md:inline capitalize font-medium text-[11px]">
@@ -91,7 +91,7 @@ export function LoginView({ onSuccess }: LoginViewProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel>Ethereal OKLCH Themes</DropdownMenuLabel>
+              <DropdownMenuLabel>Pilihan Tema</DropdownMenuLabel>
               {THEME_OPTIONS.map((t) => (
                 <DropdownMenuItem
                   key={t.id}

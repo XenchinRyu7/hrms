@@ -54,25 +54,25 @@ export function AuditView() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs uppercase tracking-wider font-semibold text-primary">
-              Compliance & Security
+              Kepatuhan & Keamanan
             </span>
             <span className="text-muted-foreground">&bull;</span>
             <span className="text-xs text-muted-foreground">
-              Immutable Ledger Stream
+              Riwayat Aktivitas Sistem
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Audit Trail & Security Telemetry
+            Log Audit & Aktivitas
           </h1>
           <p className="text-xs text-muted-foreground">
-            Cryptographic activity logs, IP tracking, and enterprise access
-            governance.
+            Pencatatan riwayat aktivitas pengguna, audit keamanan, dan pelacakan
+            sesi.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="primary" className="text-xs py-1 px-3">
-            ISO 27001 & UU PDP Compliant
+          <Badge variant="outline" className="text-xs py-1 px-3">
+            Audit Trail Aktif
           </Badge>
         </div>
       </div>
@@ -97,30 +97,28 @@ export function AuditView() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground font-medium">
-              RBAC Policy Enforcement
+              Akses Berbasis Peran
             </p>
             <Lock className="h-4 w-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-bold text-foreground font-mono">
-            100% Strict
-          </p>
+          <p className="text-2xl font-bold text-foreground font-mono">Aktif</p>
           <p className="text-[11px] text-muted-foreground">
-            Role-gated API endpoints enforced at Go proxy
+            Hak akses dibatasi sesuai peran pengguna
           </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground font-medium">
-              Data Storage Engine
+              Penyimpanan Data
             </p>
             <Database className="h-4 w-4 text-indigo-400" />
           </div>
           <p className="text-2xl font-bold text-foreground font-mono">
-            Supabase Postgres
+            Terenkripsi
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Row Level Security (RLS) policies armed
+            Penyimpanan data aman terlindungi
           </p>
         </div>
       </div>
@@ -209,7 +207,7 @@ export function AuditView() {
                       <td colSpan={6} className="p-4">
                         <div className="p-3 rounded-xl bg-zinc-950 border border-border text-[11px] font-mono text-zinc-300 overflow-x-auto space-y-1">
                           <p className="text-muted-foreground uppercase text-[10px] font-bold">
-                            Telemetry Payload Details:
+                            Detail Payload Log:
                           </p>
                           <pre>
                             {JSON.stringify(

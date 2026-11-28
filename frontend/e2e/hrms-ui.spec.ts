@@ -51,7 +51,7 @@ test.describe("EHMRS Full UI & Sidebar Navigation Flow", () => {
 
     // Wait for Dashboard to mount
     await page.waitForURL((url) => url.pathname === "/", { timeout: 10000 });
-    await expect(page.getByText("Executive Console").first()).toBeVisible({
+    await expect(page.getByText(/Welcome back/i).first()).toBeVisible({
       timeout: 10000,
     });
 

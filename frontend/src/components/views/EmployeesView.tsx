@@ -120,8 +120,8 @@ export function EmployeesView() {
         avatar_url: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 5000)}?w=150`,
       });
       toast.success(
-        "Employee Enrolled",
-        `${newEmp.full_name} has been added to enterprise directory.`,
+        "Karyawan Ditambahkan",
+        `${newEmp.full_name} berhasil ditambahkan ke direktori.`,
       );
       setIsAddModalOpen(false);
       setNewEmp({
@@ -194,8 +194,7 @@ export function EmployeesView() {
             Employee Directory & Organization
           </h1>
           <p className="text-xs text-muted-foreground">
-            Enterprise roster management, hierarchical reporting lines, and
-            personnel files.
+            Kelola data karyawan, struktur organisasi, dan profil pegawai.
           </p>
         </div>
 
@@ -602,10 +601,10 @@ export function EmployeesView() {
       <Modal open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <ModalContent className="max-w-lg p-6">
           <ModalHeader>
-            <ModalTitle>Add New Enterprise Employee</ModalTitle>
+            <ModalTitle>Tambah Karyawan Baru</ModalTitle>
             <ModalDescription>
-              Enroll a new team member with department reporting lines and role
-              permissions.
+              Daftarkan anggota tim baru dengan departemen dan peran yang
+              sesuai.
             </ModalDescription>
           </ModalHeader>
 
@@ -780,10 +779,10 @@ export function EmployeesView() {
       <ConfirmationDialog
         open={!!employeeToDelete}
         onOpenChange={(open) => !open && setEmployeeToDelete(null)}
-        title="Remove Employee from Enterprise Directory?"
-        description={`This will permanently delete ${employeeToDelete?.full_name} (${employeeToDelete?.employee_code}) from Supabase PostgreSQL and revoke all security access.`}
-        confirmText="Yes, Remove Employee"
-        cancelText="Cancel"
+        title="Hapus Karyawan dari Direktori?"
+        description={`Tindakan ini akan menghapus data ${employeeToDelete?.full_name} (${employeeToDelete?.employee_code}) secara permanen dari sistem.`}
+        confirmText="Ya, Hapus Karyawan"
+        cancelText="Batal"
         variant="destructive"
         onConfirm={confirmDelete}
         onCancel={() => setEmployeeToDelete(null)}

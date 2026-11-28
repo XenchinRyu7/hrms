@@ -62,7 +62,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Overview",
     items: [
       {
-        label: "Executive Console",
+        label: "Dashboard",
         href: "/",
         icon: LayoutDashboard,
         roles: ["admin", "hr_manager", "manager"],
@@ -361,7 +361,7 @@ export function HRMSAppShell({
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Official Ethereal UI Notification Center */}
+            {/* Notification Center */}
             <NotificationCenter
               notifications={notifications}
               onMarkAsRead={markAsRead}
@@ -371,7 +371,61 @@ export function HRMSAppShell({
               align="end"
             />
 
-            {/* Account Profile Dropdown (Top Navbar) */}
+            {/* Theme Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer text-foreground transition"
+                  title="Pilih Tema Tampilan"
+                >
+                  <Palette className="h-3.5 w-3.5 text-primary" />
+                  <span className="hidden sm:inline capitalize font-medium text-[11px]">
+                    {THEME_OPTIONS.find((t) => t.id === colorTheme)?.name ||
+                      "Theme"}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel>Pilihan Tema</DropdownMenuLabel>
+                {THEME_OPTIONS.map((t) => (
+                  <DropdownMenuItem
+                    key={t.id}
+                    onClick={() => setColorTheme(t.id)}
+                    className="flex items-center justify-between text-xs cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${t.previewClass}`}
+                      />
+                      <span>{t.name}</span>
+                    </div>
+                    {colorTheme === t.id && (
+                      <Badge variant="primary" className="text-[9px]">
+                        Active
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Dark / Light Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleMode}
+              title={mode === "dark" ? "Mode Terang" : "Mode Gelap"}
+              className="p-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer flex items-center justify-center"
+            >
+              {mode === "dark" ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-primary" />
+              )}
+            </button>
+
+            {/* Account Profile Dropdown (Paling Kanan) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -420,60 +474,6 @@ export function HRMSAppShell({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs cursor-pointer text-foreground transition"
-                  title="Switch Ethereal OKLCH Theme"
-                >
-                  <Palette className="h-3.5 w-3.5 text-primary" />
-                  <span className="hidden sm:inline capitalize font-medium text-[11px]">
-                    {THEME_OPTIONS.find((t) => t.id === colorTheme)?.name ||
-                      "Theme"}
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel>Ethereal OKLCH Themes</DropdownMenuLabel>
-                {THEME_OPTIONS.map((t) => (
-                  <DropdownMenuItem
-                    key={t.id}
-                    onClick={() => setColorTheme(t.id)}
-                    className="flex items-center justify-between text-xs cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${t.previewClass}`}
-                      />
-                      <span>{t.name}</span>
-                    </div>
-                    {colorTheme === t.id && (
-                      <Badge variant="primary" className="text-[9px]">
-                        Active
-                      </Badge>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Dark / Light Mode Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleMode}
-              title={
-                mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-              }
-              className="p-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground transition cursor-pointer flex items-center justify-center"
-            >
-              {mode === "dark" ? (
-                <Sun className="h-4 w-4 text-amber-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-primary" />
-              )}
-            </button>
           </div>
         </header>
 
@@ -536,8 +536,8 @@ export function HRMSAppShell({
                 <span className="font-mono text-primary font-semibold">
                   {currentNavItem?.label}
                 </span>
-                . Enterprise security policies restrict this module to
-                authorized roles ({currentNavItem?.roles.join(", ")}).
+                . Kebijakan akses membatasi modul ini hanya untuk peran (
+                {currentNavItem?.roles.join(", ")}).
               </p>
               <div className="flex items-center gap-3">
                 <Button
@@ -545,7 +545,7 @@ export function HRMSAppShell({
                   size="sm"
                   onClick={() => navigate("/")}
                 >
-                  Return to Console
+                  Kembali ke Dashboard
                 </Button>
                 <Button variant="outline" size="sm" onClick={logout}>
                   Sign Out
