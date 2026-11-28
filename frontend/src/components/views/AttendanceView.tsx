@@ -13,11 +13,13 @@ import {
   Coins,
   Coffee,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import { Button, Badge, Input } from "@etherealui/react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
+import { exportToCSV } from "../../lib/export";
 import type { Attendance, User } from "../../lib/types";
 
 export function AttendanceView() {
@@ -174,6 +176,59 @@ export function AttendanceView() {
       acc + (curr.overtime_pay || (curr.overtime_hours || 0) * 50000),
     0,
   );
+
+  const handleExportCSV = () => {
+    if (history.length === 0) {
+      toast.warning(
+        "Tidak Ada Data",
+        "Belum ada riwayat kehadiran untuk diekspor.",
+      );
+      return;
+    }
+
+    const headers = [
+      "Tanggal",
+      "Jam Masuk",
+      "Jam Keluar",
+      "Total Durasi (Jam)",
+      "Jam Kerja Efektif",
+      "Jam Lembur",
+      "Estimasi Uang Lembur (IDR)",
+      "Lokasi",
+      "Status",
+      "Catatan",
+    ];
+
+    const rows = history.map((att) => [
+      att.date,
+      att.clock_in
+        ? new Date(att.clock_in).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "-",
+      att.clock_out
+        ? new Date(att.clock_out).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "-",
+      att.total_hours.toFixed(1),
+      (att.work_hours || Math.max(0, att.total_hours - 1)).toFixed(1),
+      (att.overtime_hours || 0).toFixed(1),
+      att.overtime_pay || (att.overtime_hours || 0) * 50000,
+      att.work_location || "Office",
+      att.status,
+      att.notes || "-",
+    ]);
+
+    const dateSlug = new Date().toISOString().slice(0, 7);
+    exportToCSV(`rekap-presensi-${dateSlug}`, headers, rows);
+    toast.success(
+      "Export Berhasil",
+      "File rekap CSV presensi berhasil diunduh.",
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -423,7 +478,7 @@ export function AttendanceView() {
 
       {/* Attendance History Table */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden space-y-0">
-        <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-bold text-card-foreground">
               Riwayat Kehadiran & Catatan Jam Kerja
@@ -432,6 +487,17 @@ export function AttendanceView() {
               Log waktu clock-in, clock-out, jam istirahat, dan kalkulasi lembur
             </p>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+            title="Download riwayat presensi dalam format CSV"
+          >
+            <Download className="h-3.5 w-3.5 text-primary" />
+            <span>Export CSV Presensi</span>
+          </Button>
         </div>
 
         <div className="overflow-x-auto">

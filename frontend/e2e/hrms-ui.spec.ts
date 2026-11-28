@@ -122,7 +122,37 @@ test.describe("EHMRS Full UI & Sidebar Navigation Flow", () => {
       await expect(navItem).toHaveClass(/bg-primary/);
     }
 
-    // 3. Verify Profile Dropdown
+    // 3. Verify Newly Implemented Core Features
+    // A. Team Leave Calendar
+    await page.goto("/leave");
+    const calendarTabBtn = page.getByRole("button", {
+      name: /Kalender Cuti Tim/i,
+    });
+    await expect(calendarTabBtn).toBeVisible();
+    await calendarTabBtn.click();
+    await expect(page.getByText(/Jadwal Cuti Bersama Tim/i)).toBeVisible();
+
+    // B. Employee Document & Contract Status in Drawer
+    await page.goto("/employees");
+    const firstEmployeeRow = page.locator("tbody tr").first();
+    await expect(firstEmployeeRow).toBeVisible();
+    await firstEmployeeRow.click();
+    await expect(page.getByText(/Status Kontrak Kerja/i)).toBeVisible();
+    await expect(page.getByText(/Berkas & Dokumen Pegawai/i)).toBeVisible();
+
+    // C. Payroll Export CSV button
+    await page.goto("/payroll");
+    await expect(
+      page.getByRole("button", { name: /Export Rekap CSV/i }),
+    ).toBeVisible();
+
+    // D. Attendance Export CSV button
+    await page.goto("/attendance");
+    await expect(
+      page.getByRole("button", { name: /Export CSV Presensi/i }),
+    ).toBeVisible();
+
+    // 4. Verify Profile Dropdown
     const profileBtn = page
       .getByRole("button", { name: /Alex Thorne|Akun/i })
       .first();
@@ -136,7 +166,7 @@ test.describe("EHMRS Full UI & Sidebar Navigation Flow", () => {
       page.getByText("Profil Karyawan & Keamanan").first(),
     ).toBeVisible({ timeout: 10000 });
 
-    // 4. Assert zero fatal page errors and zero failed static JS requests
+    // 5. Assert zero fatal page errors and zero failed static JS requests
     const criticalFailed = failedRequests.filter(
       (r) =>
         r.includes(".vite/deps") || r.includes(".js") || r.includes(".astro"),

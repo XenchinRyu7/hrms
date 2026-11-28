@@ -32,6 +32,7 @@ import {
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
 import { useNotification } from "../../lib/notification-context";
+import { exportToCSV, printPayslip } from "../../lib/export";
 import type { PayrollPeriod, Payslip, User } from "../../lib/types";
 
 export function PayrollView() {
@@ -155,6 +156,81 @@ export function PayrollView() {
     }).format(num);
   };
 
+  const handleExportCSV = () => {
+    if (payslips.length === 0) {
+      toast.warning(
+        "Tidak Ada Data",
+        "Belum ada data slip gaji untuk diekspor.",
+      );
+      return;
+    }
+
+    const headers = [
+      "Nama Karyawan",
+      "Kode Karyawan",
+      "Departemen",
+      "Jabatan",
+      "Periode",
+      "Gaji Pokok (IDR)",
+      "Uang Lembur (IDR)",
+      "Reimbursement (IDR)",
+      "Total Tunjangan (IDR)",
+      "Potongan Pajak PPh21 (IDR)",
+      "Potongan BPJS (IDR)",
+      "Total Potongan (IDR)",
+      "Gaji Bersih / THP (IDR)",
+      "Status",
+    ];
+
+    const rows = payslips.map((slip) => [
+      slip.employee_name || "Karyawan",
+      slip.employee_code || "-",
+      slip.department_name || "-",
+      slip.job_title || "-",
+      slip.period_name || currentPeriodObj?.name || "-",
+      slip.basic_salary,
+      Number(slip.breakdown?.allowances?.overtime_pay || 0),
+      Number(slip.breakdown?.allowances?.reimbursements || 0),
+      slip.total_allowances,
+      Number(slip.breakdown?.deductions?.tax || 0),
+      Number(slip.breakdown?.deductions?.insurance || 0),
+      slip.total_deductions,
+      slip.net_salary,
+      slip.status,
+    ]);
+
+    const periodNameSlug = (currentPeriodObj?.name || "payroll")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-");
+    exportToCSV(`rekap-payroll-${periodNameSlug}`, headers, rows);
+    toast.success(
+      "Export Berhasil",
+      "File rekap CSV payroll berhasil diunduh.",
+    );
+  };
+
+  const handlePrintPayslip = (slip: Payslip) => {
+    printPayslip({
+      companyName: "Ethereal Global Corporation",
+      companyAddress:
+        "Sudirman Central Business District (SCBD), Jakarta 12190",
+      employeeName: slip.employee_name || "Karyawan",
+      employeeCode: slip.employee_code || "EMP-001",
+      jobTitle: slip.job_title || "Staff",
+      department: slip.department_name || "Divisi Operasional",
+      periodName:
+        slip.period_name || currentPeriodObj?.name || "Periode Berjalan",
+      basicSalary: Number(slip.basic_salary || 0),
+      overtimePay: Number(slip.breakdown?.allowances?.overtime_pay || 0),
+      reimbursements: Number(slip.breakdown?.allowances?.reimbursements || 0),
+      totalAllowances: Number(slip.total_allowances || 0),
+      taxDeduction: Number(slip.breakdown?.deductions?.tax || 0),
+      insuranceDeduction: Number(slip.breakdown?.deductions?.insurance || 0),
+      totalDeductions: Number(slip.total_deductions || 0),
+      netSalary: Number(slip.net_salary || 0),
+    });
+  };
+
   const currentPeriodObj = periods.find((p) => p.id === selectedPeriod);
 
   return (
@@ -183,34 +259,48 @@ export function PayrollView() {
           </p>
         </div>
 
-        {isAdminOrHR && (
-          <div className="flex items-center gap-2.5">
-            {/* Input Gaji Pokok Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSalaryModalOpen(true)}
-              className="text-xs flex items-center gap-1.5 shadow-xs"
-            >
-              <Coins className="h-3.5 w-3.5 text-amber-500" />
-              <span>Input / Atur Gaji Karyawan</span>
-            </Button>
+        <div className="flex items-center gap-2.5">
+          {/* Tombol Export Rekap CSV */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Download rekap payroll dalam format CSV"
+          >
+            <Download className="h-3.5 w-3.5 text-primary" />
+            <span>Export Rekap CSV</span>
+          </Button>
 
-            {/* Run Payroll (Only HR Manager or Admin) */}
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setIsConfirmRunOpen(true)}
-              disabled={processing || !selectedPeriod}
-              className="text-xs flex items-center gap-1.5 shadow-md shadow-primary/20"
-            >
-              <Play className="h-3.5 w-3.5 fill-current" />
-              <span>
-                {processing ? "Memproses..." : "Hitung & Generate Payroll"}
-              </span>
-            </Button>
-          </div>
-        )}
+          {isAdminOrHR && (
+            <>
+              {/* Input Gaji Pokok Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSalaryModalOpen(true)}
+                className="text-xs flex items-center gap-1.5 shadow-xs"
+              >
+                <Coins className="h-3.5 w-3.5 text-amber-500" />
+                <span>Input / Atur Gaji Karyawan</span>
+              </Button>
+
+              {/* Run Payroll (Only HR Manager or Admin) */}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsConfirmRunOpen(true)}
+                disabled={processing || !selectedPeriod}
+                className="text-xs flex items-center gap-1.5 shadow-md shadow-primary/20"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>
+                  {processing ? "Memproses..." : "Hitung & Generate Payroll"}
+                </span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Cycle Overview Cards (HR / Admin View) */}
@@ -622,7 +712,19 @@ export function PayrollView() {
             </div>
           )}
 
-          <ModalFooter>
+          <ModalFooter className="flex items-center justify-between w-full">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() =>
+                selectedPayslip && handlePrintPayslip(selectedPayslip)
+              }
+              className="text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Cetak / Unduh PDF Slip Gaji</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"

@@ -16,6 +16,11 @@ import {
   CheckCircle,
   X,
   Network,
+  FileText,
+  Download,
+  Upload,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Avatar,
@@ -571,6 +576,137 @@ export function EmployeesView() {
                       {selectedEmployee.phone || "N/A"}
                     </span>
                   </div>
+                </div>
+
+                {/* Employment Contract Status */}
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                      <span>Status Kontrak Kerja</span>
+                    </span>
+                    <Badge
+                      variant={
+                        selectedEmployee.role === "admin"
+                          ? "primary"
+                          : "secondary"
+                      }
+                      className="text-[10px]"
+                    >
+                      {selectedEmployee.role === "admin"
+                        ? "PKWTT (Tetap)"
+                        : "PKWT (Kontrak)"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Masa Berlaku:</span>
+                    <span className="font-semibold text-foreground font-mono">
+                      {selectedEmployee.hire_date || "2024-01-15"} s/d{" "}
+                      {selectedEmployee.role === "admin"
+                        ? "Permanen"
+                        : "2026-12-31"}
+                    </span>
+                  </div>
+
+                  {selectedEmployee.role !== "admin" ? (
+                    <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] flex items-center gap-2">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        Masa kontrak tersisa ~33 hari. Siapkan evaluasi
+                        perpanjangan.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[11px] flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        Karyawan tetap berstatus aktif tanpa batas waktu
+                        berakhir.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Employee Document Repository */}
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5 text-primary" />
+                      <span>Berkas &amp; Dokumen Pegawai</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      4 Berkas Terverifikasi
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {[
+                      {
+                        name: "Kartu Tanda Penduduk (KTP)",
+                        type: "PDF/Scan",
+                        date: "15 Jan 2024",
+                      },
+                      {
+                        name: "NPWP Pajak Pribadi",
+                        type: "PDF/Scan",
+                        date: "15 Jan 2024",
+                      },
+                      {
+                        name: "Perjanjian Kerja (PKWT/PKWTT)",
+                        type: "Surat Resmi",
+                        date: "16 Jan 2024",
+                      },
+                      {
+                        name: "Ijazah & Sertifikasi",
+                        type: "PDF/Dokumen",
+                        date: "18 Jan 2024",
+                      },
+                    ].map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2 rounded-lg border border-border bg-card flex items-center justify-between"
+                      >
+                        <div className="truncate mr-2">
+                          <p className="font-medium text-foreground truncate">
+                            {doc.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {doc.type} &bull; {doc.date}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            toast.success(
+                              "Unduh Berkas",
+                              `Memulai unduhan berkas ${doc.name}`,
+                            )
+                          }
+                          className="h-6 px-2 text-[10px] shrink-0 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Download className="h-3 w-3" />
+                          <span>Unduh</span>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      toast.info(
+                        "Unggah Dokumen",
+                        "Fitur unggah berkas baru siap digunakan.",
+                      )
+                    }
+                    className="w-full text-xs flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>Upload Berkas Baru</span>
+                  </Button>
                 </div>
               </div>
 
